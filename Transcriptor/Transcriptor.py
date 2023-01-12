@@ -77,8 +77,8 @@ class Transcriptor(object):
         if duration >= self.duration_threshold: #if duration is larger than 3s
             data = self.data_array
             #passing data from VAD Model
-            speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=self.samplerate,threshold=self.vad_threshold)
-            # print(speech_dict)
+            speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.samplerate),threshold=self.vad_threshold)
+            print(speech_dict)
             if speech_dict: #if speech detected
                 max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
                 #if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
