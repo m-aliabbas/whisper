@@ -9,6 +9,10 @@ import numpy as np
 from pydub import AudioSegment
 from scipy.io.wavfile import write
 
+import warnings
+warnings.filterwarnings('ignore')
+
+
 """
 **WhisperTranscriptorAPI Defination**
 """
@@ -126,7 +130,7 @@ class WhisperTranscriptorAPI:
         wave = wave / np.iinfo(np.int16).max #normalize
         print(wave.shape)
         self.save_audio(wave=wave)
-        inputs = self.processor(wave, return_tensors="pt") #tokenize
+        inputs = self.processor(wave, return_tensors="pt",sampling_rate=16000) #tokenize
         input_features = inputs.input_features
         generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 

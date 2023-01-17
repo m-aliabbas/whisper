@@ -2,6 +2,8 @@ import torch
 import numpy as np
 from whisper1 import WhisperTranscriptorAPI 
 
+import warnings
+warnings.filterwarnings('ignore')
 
 
 #ASR class defination

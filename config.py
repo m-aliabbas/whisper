@@ -1,6 +1,6 @@
 # -- Configurations for the Transcriptor module
 import torch
-from Transcriptor import enums as Trans_enums
+from WTranscriptor import enums as Trans_enums
 config = dict()
 
 # -------------- General configs ------------#

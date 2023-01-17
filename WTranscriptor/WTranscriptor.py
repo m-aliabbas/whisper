@@ -13,7 +13,7 @@ vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
  *_) = utils
 
 
-class Transcriptor(object):
+class WTranscriptor(object):
     """
     Can take streaming raw audio blocks and convert into transcript
 
@@ -78,7 +78,7 @@ class Transcriptor(object):
             data = self.data_array
             #passing data from VAD Model
             speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.samplerate),threshold=self.vad_threshold)
-            print(speech_dict)
+            # print(speech_dict)
             if speech_dict: #if speech detected
                 max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
                 #if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     dtype = 'int16'
     samplerate = file_object.samplerate
     config=dict()
-    transcriptor = Transcriptor()
+    transcriptor = WTranscriptor()
     raw_data = file_object.buffer_read(blocksize, dtype=dtype)
     while (not transcriptor.push(raw_data, pause_type="small")):
         raw_data = file_object.buffer_read(blocksize, dtype=dtype)

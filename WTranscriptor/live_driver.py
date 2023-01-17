@@ -1,6 +1,9 @@
 import queue
 import sounddevice as sd
-from Transcriptor import Transcriptor
+from WTranscriptor import WTranscriptor
+import warnings
+warnings.filterwarnings('ignore')
+
 class InputStreamer():
     def __init__(self, device) -> None:
         try:
@@ -32,7 +35,7 @@ def get_transcript(in_stream_obj, transcriptor):
 
 input_idx = 16 #ali_system device
 config=dict()
-transcriptor = Transcriptor(config=config)
+transcriptor = WTranscriptor(config=config)
 input_stream_obj = InputStreamer(device=input_idx)
 
 print("[+++] Everything loaded")
