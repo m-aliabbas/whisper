@@ -4,6 +4,8 @@ import soundfile as sf
 from WhisperASR import ASR
 import enums
 import sounddevice as sd
+import timeit
+import math
 vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                               model='silero_vad',
                               force_reload=False)
@@ -59,7 +61,7 @@ class WTranscriptor(object):
         self.amplitude = np.iinfo(np.int16).max
         # self.warmup()
 
-    def push(self, raw_audio_block, pause_type=1, is_greedy=False, verbose=False):
+    def push(self, raw_audio_block, pause_type=1, is_greedy=False, verbose=False,last_block=False):
         """
         The main function of the Transcriptor module. For an example usage, see the code in __main__ in Transcriptor.py
 
@@ -67,18 +69,17 @@ class WTranscriptor(object):
             raw_audio_block: Output from sounddevice raw stream of arbitrary blocksizey.
             
         """
-
+        gen_transcript = False
         #obtaining audio from bytes
         tmp_np = self.byte2np(raw_audio_block)
         self.data_array = np.hstack((self.data_array,tmp_np))
-        duration  = len(self.data_array) / self.samplerate #duration 16000/16000=1s
-
-
+        duration  = len(self.data_array) / self.samplerate #duration 16000/16000=1s\
+        speech_dict=None
         if duration >= self.duration_threshold: #if duration is larger than 3s
             data = self.data_array
             #passing data from VAD Model
-            speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.samplerate),threshold=self.vad_threshold)
-            # print(speech_dict)
+            if len(data) % 16000 == 0: #running only when a sec ticks
+                speech_dict = get_speech_timestamps(self.data_array, vad_model, sampling_rate=int(self.samplerate),threshold=self.vad_threshold)
             if speech_dict: #if speech detected
                 max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
                 #if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
@@ -86,17 +87,18 @@ class WTranscriptor(object):
                     
                     print('[+] Pause Detected')
                     self.status=True
-            
+                    gen_transcript = True
 
             if duration > self.max_allowable_duration: #10 second acheived
                 print("[-] Max Limit Exceed")
                 self.status = True
-            
-            transcript=''
-            #generate transcript
-            ids,transcript = self.asr.get_transcript(data)
+                gen_transcript = True
+
+        if gen_transcript or last_block:
+            transcript = self.asr.get_transcript(self.data_array)
             self.transcript = transcript
-            # print(transcript)
+            self.status=True
+            
         return self.status
 
     def refresh(self):
@@ -112,22 +114,40 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/transcriptor/s1.wav"
+    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/40sec.wav"
     file_object =  sf.SoundFile(filepath)
-    blocksize = 8000
+    blocksize = 16000
     dtype = 'int16'
     samplerate = file_object.samplerate
+    last_block_index = int(len(file_object)/blocksize)
     config=dict()
     transcriptor = WTranscriptor()
+    transcpt=''
     raw_data = file_object.buffer_read(blocksize, dtype=dtype)
-    while (not transcriptor.push(raw_data, pause_type="small")):
-        raw_data = file_object.buffer_read(blocksize, dtype=dtype)
-        if len(raw_data) == 0:
+    block_index = 1
+    while True:
+        print('Current Block : {} , LastBlock : {} '.format(block_index,last_block_index))
+        if last_block_index < block_index:
+            is_last_processing_block=True
+        else:
+            is_last_processing_block=False
+
+        while (not transcriptor.push(raw_data, pause_type="small",last_block=is_last_processing_block)):
+            raw_data = file_object.buffer_read(blocksize, dtype=dtype)
+            block_index+=1
+        # print(is_last_processing_block)
+        transcpt += transcriptor.transcript[1]
+        
+        transcriptor.refresh()
+
+        if last_block_index <= block_index :
+            file_object.close()
+            # print('Done')
             break
+            
         
-    print(transcriptor.transcript)
-    transcriptor.refresh()
-        
+    print(transcpt) 
+
     
     
     

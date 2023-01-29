@@ -143,9 +143,9 @@ if __name__ == "__main__":
     whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en')
 
     """Experiments:"""
+    import timeit
 
-    transcript1,ids=whisper_transcriptor.generate_transcript(audio_path='delme_rec_unlimited_ykwxy3rm.wav')
-
+    transcript1,ids=whisper_transcriptor.generate_transcript(audio_path='20sec.wav')
     print('Transcript',transcript1)
     print('IDs Shape',ids.shape)
 

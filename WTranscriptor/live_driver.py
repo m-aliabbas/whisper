@@ -11,6 +11,7 @@ class InputStreamer():
             input_dev = device
             self.in_stream = sd.RawInputStream(samplerate=16000, blocksize = 8000, device=input_dev, dtype='int16',
                                             channels=1, callback=self.in_callback)
+            print('Done_Constructing')
         except ValueError:
             print("Error! Kindly check the name of the input device (virtual cable).")
             exit()
@@ -33,11 +34,10 @@ def get_transcript(in_stream_obj, transcriptor):
     transcriptor.refresh()
     return result
 
-input_idx = 16 #ali_system device
+input_idx = 7 #ali_system device
 config=dict()
 transcriptor = WTranscriptor(config=config)
 input_stream_obj = InputStreamer(device=input_idx)
-
 print("[+++] Everything loaded")
 transcript=get_transcript(in_stream_obj=input_stream_obj,transcriptor=transcriptor)
 print("[+++] Function Completed")
