@@ -8,8 +8,9 @@ import os
 import numpy as np
 from pydub import AudioSegment
 from scipy.io.wavfile import write
-
+import whisper
 import warnings
+import timeit
 warnings.filterwarnings('ignore')
 
 
@@ -28,7 +29,7 @@ class WhisperTranscriptorAPI:
     '''
     #----------------------- constructor -------------------------------------
     #
-    def __init__(self,model_path=''):
+    def __init__(self,model_path='',file_processing=False):
 
         '''
         1) Defining processor for processing audio input for Whisper and
@@ -42,10 +43,14 @@ class WhisperTranscriptorAPI:
 
         self.model_path = model_path
         self.processor = WhisperProcessor.from_pretrained(self.model_path) 
-        self.model = WhisperForConditionalGeneration.from_pretrained(self.model_path)
-        self.model.config.forced_decoder_ids = None
-        self.model.config.suppress_tokens = []
-        self.OUTPUT_DIR= "temp"
+        
+        if file_processing:
+            self.model = whisper.load_model('base.en')
+        else:
+            self.model = WhisperForConditionalGeneration.from_pretrained(self.model_path)
+            self.model.config.forced_decoder_ids = None
+            self.model.config.suppress_tokens = []
+        self.OUTPUT_DIR= "audios"
 
 
     #--------------------------- convert mp3 to wav ---------------------------
@@ -69,14 +74,15 @@ class WhisperTranscriptorAPI:
         save_path = f"{self.OUTPUT_DIR}"
         if not os.path.exists(save_path): #If path not exist create a directory
             os.makedirs(save_path, exist_ok=True)
-        if os.path.exists(path):
+        if os.path.exists(save_path):
             try:
                 sound = AudioSegment.from_mp3(path) #Read a sound file
+                # print('Working Here')
                 sound = sound.set_frame_rate(16000) #resample to 16000
                 sound.export(f"{save_path}/{filename[:-4]}.wav", format="wav") #save to *.wav
                 return f"{save_path}/{filename[:-4]}.wav"
-            except:
-                print(path)
+            except Exception as e:
+                print(path, e)
 
 
     #------------------------- genrate transcript -----------------------------
@@ -98,6 +104,7 @@ class WhisperTranscriptorAPI:
         exten = os.path.splitext(self.audio_path)[1]
         if exten == '.mp3':
             self.audio_path = self.convert_to_wav(self.audio_path)
+        print(self.audio_path)
         wave,fs=torchaudio.load(self.audio_path)
         #tensor to numpy
         wave=wave.numpy()
@@ -105,11 +112,31 @@ class WhisperTranscriptorAPI:
             wave=wave[0,:]
         inputs = self.processor(wave, return_tensors="pt")
         input_features = inputs.input_features
-        generated_ids = self.model.generate(inputs=input_features)
+        with torch.inference_mode():
+            generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return transcription,generated_ids
 
+    #----------------------- For Audio More than 30 s -------------------------
+    #
+    def generate_on_longer_file(self,audio_path=''):
+        '''
+        Whisper only work on audio chunk of 30s. If Audio is longer than 30s it 
+        turncate it to 30 s. In other case if audio is lesser than 30s it pad
+        uo to 30s then generate trabscript. Here we are using transcribe function
+
+        args:
+            audio_path (str): path to Audio file
+        returns:
+            transcript (str): generate transcript over audio file
+        '''
+        self.audio_path = audio_path
+        exten = os.path.splitext(self.audio_path)[1]
+        if exten == '.mp3':
+            self.audio_path = self.convert_to_wav(self.audio_path)
+        result = self.model.transcribe(self.audio_path)['text']
+        return result
     #---------------------------- save audio-----------------------------------
     #
     def save_audio(self,wave):
@@ -128,11 +155,10 @@ class WhisperTranscriptorAPI:
         Generate transcript usign a numpy array given as inpuy 
         '''
         wave = wave / np.iinfo(np.int16).max #normalize
-        print(wave.shape)
-        self.save_audio(wave=wave)
         inputs = self.processor(wave, return_tensors="pt",sampling_rate=16000) #tokenize
         input_features = inputs.input_features
-        generated_ids = self.model.generate(inputs=input_features)
+        with torch.inference_mode():
+            generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return transcription,generated_ids
@@ -140,23 +166,12 @@ class WhisperTranscriptorAPI:
 if __name__ == "__main__":
     """Model Initialization"""
 
-    whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en')
+
+    # Please set file_processing to True when you have to run on longer file other wise use old apporch
+    whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en',file_processing=True)
 
     """Experiments:"""
-    import timeit
 
-    transcript1,ids=whisper_transcriptor.generate_transcript(audio_path='20sec.wav')
-    print('Transcript',transcript1)
-    print('IDs Shape',ids.shape)
-
-    #transcript2=whisper_transcriptor.genrate_transcript(audio_path='abc/audio5.wav')
-
-    #print(transcript2)
-
-    #transcript3=whisper_transcriptor.genrate_transcript(audio_path='ali.mp3')
-
-    #print(transcript3)
-
-    #transcript4=whisper_transcriptor.genrate_transcript(audio_path='temp/ali.wav')
-
-    #print(transcript4)
+    transcript = whisper_transcriptor.generate_on_longer_file(audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav')
+    print(transcript)
+  

@@ -4,7 +4,6 @@ import soundfile as sf
 from WhisperASR import ASR
 import enums
 import sounddevice as sd
-import timeit
 import math
 vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                               model='silero_vad',
@@ -114,9 +113,9 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/ali.wav"
+    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/2sec.wav"
     file_object =  sf.SoundFile(filepath)
-    blocksize = 16000
+    blocksize = 8000
     dtype = 'int16'
     samplerate = file_object.samplerate
     last_block_index = int(len(file_object)/blocksize)
@@ -127,7 +126,6 @@ if __name__ == "__main__":
     block_index = 1
     is_last_processing_block=False
     while True:
-       
         while (not transcriptor.push(raw_data, pause_type="small",last_block=is_last_processing_block)):
             raw_data = file_object.buffer_read(blocksize, dtype=dtype)
             block_index+=1
@@ -141,11 +139,7 @@ if __name__ == "__main__":
         if is_last_processing_block:
             file_object.close()
             break
-        
-        
-        
-        
-        
+    
     print(transcpt) 
 
     
