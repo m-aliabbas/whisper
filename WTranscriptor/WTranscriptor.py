@@ -93,8 +93,8 @@ class WTranscriptor(object):
                 print("[-] Max Limit Exceed")
                 self.status = True
                 gen_transcript = True
-
-        if gen_transcript or last_block:
+        
+        if gen_transcript or last_block: #if last block of file or condition of pause or max duration meet
             transcript = self.asr.get_transcript(self.data_array)
             self.transcript = transcript
             self.status=True
@@ -114,7 +114,7 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/40sec.wav"
+    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/ali.wav"
     file_object =  sf.SoundFile(filepath)
     blocksize = 16000
     dtype = 'int16'
@@ -125,26 +125,26 @@ if __name__ == "__main__":
     transcpt=''
     raw_data = file_object.buffer_read(blocksize, dtype=dtype)
     block_index = 1
+    is_last_processing_block=False
     while True:
-        print('Current Block : {} , LastBlock : {} '.format(block_index,last_block_index))
-        if last_block_index < block_index:
-            is_last_processing_block=True
-        else:
-            is_last_processing_block=False
-
+       
         while (not transcriptor.push(raw_data, pause_type="small",last_block=is_last_processing_block)):
             raw_data = file_object.buffer_read(blocksize, dtype=dtype)
             block_index+=1
-        # print(is_last_processing_block)
-        transcpt += transcriptor.transcript[1]
-        
-        transcriptor.refresh()
-
-        if last_block_index <= block_index :
-            file_object.close()
-            # print('Done')
-            break
+            if last_block_index-1 < block_index:
+                is_last_processing_block=True
+            else:
+                is_last_processing_block=False
             
+        transcpt += transcriptor.transcript[1]   
+        transcriptor.refresh()   
+        if is_last_processing_block:
+            file_object.close()
+            break
+        
+        
+        
+        
         
     print(transcpt) 
 
