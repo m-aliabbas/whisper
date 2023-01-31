@@ -43,11 +43,13 @@ class WhisperTranscriptorAPI:
 
         self.model_path = model_path
         self.processor = WhisperProcessor.from_pretrained(self.model_path) 
-        
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         if file_processing:
-            self.model = whisper.load_model('base.en')
+            self.model = whisper.load_model('base.en').to(self.device)
+            # print(self.model.device)
         else:
-            self.model = WhisperForConditionalGeneration.from_pretrained(self.model_path)
+            self.model = WhisperForConditionalGeneration.from_pretrained(self.model_path).to(self.device)
+            # print(self.model.device)
             self.model.config.forced_decoder_ids = None
             self.model.config.suppress_tokens = []
         self.OUTPUT_DIR= "audios"
@@ -111,7 +113,8 @@ class WhisperTranscriptorAPI:
         if len(wave.shape)>=2:
             wave=wave[0,:]
         inputs = self.processor(wave, return_tensors="pt")
-        input_features = inputs.input_features
+        input_features = inputs.input_features.to(self.device)
+        # print(input_features)
         with torch.inference_mode():
             generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 
@@ -156,7 +159,8 @@ class WhisperTranscriptorAPI:
         '''
         wave = wave / np.iinfo(np.int16).max #normalize
         inputs = self.processor(wave, return_tensors="pt",sampling_rate=16000) #tokenize
-        input_features = inputs.input_features
+        input_features = inputs.input_features.to(self.device)
+        # print(input_features.to(self.device))
         with torch.inference_mode():
             generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 
@@ -166,12 +170,14 @@ class WhisperTranscriptorAPI:
 if __name__ == "__main__":
     """Model Initialization"""
 
-
+    import timeit
     # Please set file_processing to True when you have to run on longer file other wise use old apporch
     whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en',file_processing=True)
 
     """Experiments:"""
-
+    t1 = timeit.default_timer()
     transcript = whisper_transcriptor.generate_on_longer_file(audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav')
+    t2 = timeit.default_timer()
+    print(t1-t2)
     print(transcript)
   

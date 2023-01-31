@@ -113,7 +113,7 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/2sec.wav"
+    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav"
     file_object =  sf.SoundFile(filepath)
     blocksize = 8000
     dtype = 'int16'
@@ -125,6 +125,9 @@ if __name__ == "__main__":
     raw_data = file_object.buffer_read(blocksize, dtype=dtype)
     block_index = 1
     is_last_processing_block=False
+    import timeit
+
+    start = timeit.default_timer()
     while True:
         while (not transcriptor.push(raw_data, pause_type="small",last_block=is_last_processing_block)):
             raw_data = file_object.buffer_read(blocksize, dtype=dtype)
@@ -139,7 +142,8 @@ if __name__ == "__main__":
         if is_last_processing_block:
             file_object.close()
             break
-    
+    end = timeit.default_timer()
+    print('Time',end-start)
     print(transcpt) 
 
     
