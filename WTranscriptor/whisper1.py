@@ -175,9 +175,8 @@ if __name__ == "__main__":
     whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en',file_processing=True)
 
     """Experiments:"""
-    t1 = timeit.default_timer()
+
     transcript = whisper_transcriptor.generate_on_longer_file(audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav')
-    t2 = timeit.default_timer()
-    print(t1-t2)
+
     print(transcript)
   
