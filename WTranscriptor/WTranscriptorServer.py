@@ -45,7 +45,7 @@ class WTranscriptorServer(object):
         
         config["pause_time"] = config.get("pause_time", 2) # defining it here as default because it is used by ASR as well.
         self.config = config
-        self.asr = WhisperASR.ASR(config)
+        self.asr = ASR(config)
         self.vad_model = vad_model
         self.vad_threshold=config.get("vad_threshold",0.6) 
         # max duration at the start of audio after which a no response is detected, should be greater than pause time
@@ -53,6 +53,7 @@ class WTranscriptorServer(object):
         self.samplerate = config.get("samplerate", 16000)
         self.data_array = dict() # array to store audio blocks
         self.cuda_device = config.get("cuda_device", "cpu")
+        self.global_duration_offset = dict()
         if self.cuda_device == "cpu":
             print("WARNING: Running on CPU")
         self.duration_threshold = dict()   # wait till this value then pass the data through the model, dictionary keys correspond to clients
@@ -75,6 +76,7 @@ class WTranscriptorServer(object):
         # check if the client with this ID already exists or do we need to make a new array for it
         self.add_if_required(client_id)
         status = False
+        gen_transcript = False
         tmp_np = self.byte2np(raw_audio_block)
         self.data_array[client_id] = np.hstack((self.data_array[client_id],tmp_np))
         duration  = len(self.data_array[client_id]) / self.samplerate 
@@ -101,7 +103,7 @@ class WTranscriptorServer(object):
                 gen_transcript = True
 
             if gen_transcript or last_block: #if last block of file or condition of pause or max duration meet
-                transcript = self.asr.get_transcript(self.data_array)
+                transcript = self.asr.get_transcript(self.data_array[client_id])
                 self.transcript[client_id] = transcript
                 status = True
             
