@@ -5,14 +5,7 @@ from WhisperASR import ASR
 import enums
 import sounddevice as sd
 import math
-vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
-                              model='silero_vad',
-                              force_reload=False)
-
-(get_speech_timestamps,
- _, read_audio,VADIterator,
- *_) = utils
-
+from VAD_Interface import VAD_Interface
 
 class WTranscriptor(object):
     """
@@ -42,10 +35,10 @@ class WTranscriptor(object):
         All configs have a default value in case the config value is not found in the dictionary.
         A sample config is part of this module
         """
+        config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6}
         self.config = config
-        self.asr = ASR(config)
-        self.vad_model= vad_model
-        self.vad_threshold=config.get("vad_threshold",0.6) 
+        self.asr = ASR(config) 
+        self.vad = VAD_Interface(config=config)
         self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
         self.samplerate = config.get("samplerate", 16000.0)
         self.data_array = np.array([])
@@ -58,6 +51,7 @@ class WTranscriptor(object):
         self.status = False
         self.transcript = None
         self.amplitude = np.iinfo(np.int16).max
+        
         # self.warmup()
 
     def push(self, raw_audio_block, pause_type=1, is_greedy=False, verbose=False,last_block=False):
@@ -71,22 +65,19 @@ class WTranscriptor(object):
         gen_transcript = False
         #obtaining audio from bytes
         tmp_np = self.byte2np(raw_audio_block)
+        pause_status = False
         self.data_array = np.hstack((self.data_array,tmp_np))
         duration  = len(self.data_array) / self.samplerate #duration 16000/16000=1s\
         speech_dict=None
         if duration >= self.duration_threshold: #if duration is larger than 3s
             data = self.data_array
             #passing data from VAD Model
-            if len(data) % 16000 == 0: #running only when a sec ticks
-                speech_dict = get_speech_timestamps(self.data_array, vad_model, sampling_rate=int(self.samplerate),threshold=self.vad_threshold)
-            if speech_dict: #if speech detected
-                max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
-                #if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
-                if ((len(data)-max_end['end'])/self.samplerate) >= self.duration_threshold: #small pause detected;
-                    
-                    print('[+] Pause Detected')
-                    self.status=True
-                    gen_transcript = True
+            if len(data) % int(self.samplerate) == 0: #running only when a sec ticks
+                pause_status = self.vad.pause_status(data=self.data_array)
+            if pause_status: #if speech detected
+                print('[+] Pause Detected')
+                self.status=True
+                gen_transcript = True
 
             if duration > self.max_allowable_duration: #10 second acheived
                 print("[-] Max Limit Exceed")
@@ -113,7 +104,7 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav"
+    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/gettysburg.wav"
     file_object =  sf.SoundFile(filepath)
     blocksize = 8000
     dtype = 'int16'

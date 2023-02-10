@@ -172,11 +172,12 @@ if __name__ == "__main__":
 
     import timeit
     # Please set file_processing to True when you have to run on longer file other wise use old apporch
-    whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en',file_processing=True)
+    whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-tiny.en',file_processing=True)
 
     """Experiments:"""
-
+    t1 = timeit.default_timer()
     transcript = whisper_transcriptor.generate_on_longer_file(audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav')
-
+    t2 = timeit.default_timer()
     print(transcript)
+    print(t2-t1)
   

@@ -70,7 +70,7 @@ try:
                                         suffix='.wav', dir='')
     args.samplerate = 16000
     print(args.subtype)
-    args.filename = './audios/'+args.filename
+    args.filename = '../audios/'+args.filename
     # Make sure the file is opened before recording anything:
     with sf.SoundFile(args.filename, mode='x', samplerate=args.samplerate,
                       channels=1, subtype='PCM_24') as file:
