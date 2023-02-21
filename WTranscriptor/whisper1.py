@@ -1,5 +1,4 @@
-"""Importing Libs"""
-
+#ali's whisper
 import torch
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from datasets import load_dataset
@@ -8,9 +7,11 @@ import os
 import numpy as np
 from pydub import AudioSegment
 from scipy.io.wavfile import write
-import whisper
 import warnings
 import timeit
+import whisper
+from stable_whisper import modify_model
+# import whisper_timestamped as whisper
 warnings.filterwarnings('ignore')
 
 
@@ -29,7 +30,7 @@ class WhisperTranscriptorAPI:
     '''
     #----------------------- constructor -------------------------------------
     #
-    def __init__(self,model_path='',file_processing=False):
+    def __init__(self,model_path='',file_processing=False,word_timestamp=True):
 
         '''
         1) Defining processor for processing audio input for Whisper and
@@ -46,6 +47,7 @@ class WhisperTranscriptorAPI:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         if file_processing:
             self.model = whisper.load_model('base.en').to(self.device)
+            modify_model(self.model)
             # print(self.model.device)
         else:
             self.model = WhisperForConditionalGeneration.from_pretrained(self.model_path).to(self.device)
@@ -138,7 +140,31 @@ class WhisperTranscriptorAPI:
         exten = os.path.splitext(self.audio_path)[1]
         if exten == '.mp3':
             self.audio_path = self.convert_to_wav(self.audio_path)
-        result = self.model.transcribe(self.audio_path)['text']
+        result = self.model.transcribe(self.audio_path,language='en')['text']
+        return result
+    
+    #------------------------ For Generating the Timestamps -------------------
+    #
+    def generate_timestamps(self,audio_path=''):
+        '''
+        Whisper model can return the sentene base timestamps rather than word 
+        level timestamps as Wave2Vec models returns based on phonames. There
+        are two solutions for word level timestamps 
+        1) whisperX which aligns the output of Whisper with Wave2Vec 
+        2) Attention based word to timestamp mapping. whisper_timestamp
+
+
+
+        args:
+            audio_path (str): path to Audio file
+        returns:
+            transcript (str): generate sentence based timestamps for audio
+        '''
+        self.audio_path = audio_path
+        exten = os.path.splitext(self.audio_path)[1]
+        if exten == '.mp3':
+            self.audio_path = self.convert_to_wav(self.audio_path)
+        result = self.model.transcribe(self.audio_path,language='en')
         return result
     #---------------------------- save audio-----------------------------------
     #
@@ -172,11 +198,11 @@ if __name__ == "__main__":
 
     import timeit
     # Please set file_processing to True when you have to run on longer file other wise use old apporch
-    whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-tiny.en',file_processing=True)
+    whisper_transcriptor=WhisperTranscriptorAPI(model_path='openai/whisper-base.en',file_processing=True)
 
     """Experiments:"""
     t1 = timeit.default_timer()
-    transcript = whisper_transcriptor.generate_on_longer_file(audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/backy.wav')
+    transcript = whisper_transcriptor.generate_on_longer_file(audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/amy.wav')
     t2 = timeit.default_timer()
     print(transcript)
     print(t2-t1)
