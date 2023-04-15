@@ -1,6 +1,7 @@
 import torch
 import numpy as np
-from whisper1 import WhisperTranscriptorAPI 
+# from whisper1 import WhisperTranscriptorAPI 
+from whisper2 import WhisperTranscriptorAPI 
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -29,7 +30,7 @@ class ASR(object):
         self.cuda_device = config.get("cuda_device", "cpu")
         self.check_interval = config.get("check_interval",3)
         #path of whisper-tiny.en; can be whisper-base.en openai/whisper-base.en
-        self.model_path= config.get("model_path","openai/whisper-base.en") 
+        self.model_path= config.get("model_path","base.en") 
         print("[INFO] Loading Models")
         self.model = WhisperTranscriptorAPI(model_path=self.model_path,)
         print("[INFO] Model Loaded")

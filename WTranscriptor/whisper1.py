@@ -45,6 +45,7 @@ class WhisperTranscriptorAPI:
         self.model_path = model_path
         self.processor = WhisperProcessor.from_pretrained(self.model_path) 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cpu')
         if file_processing:
             self.model = whisper.load_model('base.en').to(self.device)
             modify_model(self.model)
@@ -192,6 +193,19 @@ class WhisperTranscriptorAPI:
         #decode the transcript using language model from processor 
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return transcription,generated_ids
+    
+    def generate_features_only(self,wave):
+        '''
+        Generate the features IDs only. 
+        No decoding is performed here
+        '''
+        wave = wave / np.iinfo(np.int16).max #normalize
+        inputs = self.processor(wave, return_tensors="pt",sampling_rate=16000) #tokenize
+        input_features = inputs.input_features.to(self.device)
+        # print(input_features.to(self.device))
+        with torch.inference_mode():
+            generated_ids = self.model.generate(inputs=input_features)
+        return generated_ids
 
 if __name__ == "__main__":
     """Model Initialization"""
