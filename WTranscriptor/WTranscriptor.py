@@ -35,7 +35,7 @@ class WTranscriptor(object):
         All configs have a default value in case the config value is not found in the dictionary.
         A sample config is part of this module
         """
-        config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6}
+        
         self.config = config
         self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
@@ -110,8 +110,10 @@ if __name__ == "__main__":
     dtype = 'int16'
     samplerate = file_object.samplerate
     last_block_index = int(len(file_object)/blocksize)
+    # added support for config
     config=dict()
-    transcriptor = WTranscriptor()
+    config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"small.en"}
+    transcriptor = WTranscriptor(config)
     transcpt=''
     raw_data = file_object.buffer_read(blocksize, dtype=dtype)
     block_index = 1
