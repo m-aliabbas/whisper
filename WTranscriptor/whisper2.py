@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 Faster Implementation of Whisper
 '''
 
-model_size = "tiny.en"
+model_size = "small.en"
 
 
 class WhisperTranscriptorAPI:

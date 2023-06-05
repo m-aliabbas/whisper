@@ -104,7 +104,7 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/preamble_5sec_resample_with_pause.wav"
+    filepath  = "/home/ali/Desktop/idrak_work/whisper/WTranscriptor/audios/20sec.wav"
     file_object =  sf.SoundFile(filepath)
     blocksize = 8000
     dtype = 'int16'

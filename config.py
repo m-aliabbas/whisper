@@ -20,7 +20,7 @@ config["one_sec_chunk_size"] =  50 # Chunck of Wav2Vec emissions equal to one se
 config["decoder_type"] =   "beam"   #currently supports beam and greedy
 
 #--------------- Whisper ASR model configs ----------------#
-config["model_path"] =   "openai/whisper-tiny.en"
+config["model_path"] =   "openai/whisper-small.en"
 
 # -------------- Decoder configs ------------#
 if config["decoder_type"] == "beam":
