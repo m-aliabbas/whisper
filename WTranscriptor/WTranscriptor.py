@@ -5,6 +5,7 @@ from WhisperASR import ASR
 import enums
 import sounddevice as sd
 import math
+import time
 from VAD_Interface import VAD_Interface
 
 class WTranscriptor(object):
@@ -37,13 +38,14 @@ class WTranscriptor(object):
         """
         
         self.config = config
+        print(self.config)
         self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
-        self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
+        self.max_allowable_duration = config.get("maximum_allowable_duration", 5) # max duration of input audio to transcribe in seconds
         self.samplerate = config.get("samplerate", 16000.0)
         self.data_array = np.array([])
         self.cuda_device = config.get("cuda_device", "cpu")
-        self.duration_threshold = config.get("duration_threshold", 1)  # after this many seconds, pass the data through the model
+        self.duration_threshold = config.get("duration_threshold", 0.8)  # after this many seconds, pass the data through the model
         self.duration_threshold_delta = config.get("duration_threshold_delta", 1) # increase in duration thresold, for next iteration. 
         if not "enum" in config:
             config["enum"] = dict()
@@ -51,6 +53,7 @@ class WTranscriptor(object):
         self.status = False
         self.transcript = None
         self.amplitude = np.iinfo(np.int16).max
+        self.last_execution = time.time()
         
         # self.warmup()
 
@@ -62,6 +65,8 @@ class WTranscriptor(object):
             raw_audio_block: Output from sounddevice raw stream of arbitrary blocksizey.
             
         """
+        current_time = time.time()
+        # print('I am inside push')
         gen_transcript = False
         #obtaining audio from bytes
         tmp_np = self.byte2np(raw_audio_block)
@@ -69,11 +74,16 @@ class WTranscriptor(object):
         self.data_array = np.hstack((self.data_array,tmp_np))
         duration  = len(self.data_array) / self.samplerate #duration 16000/16000=1s\
         speech_dict=None
+        
         if duration >= self.duration_threshold: #if duration is larger than 3s
+            # print(duration,self.duration_threshold)
             data = self.data_array
             #passing data from VAD Model
-            if len(data) % int(self.samplerate) == 0: #running only when a sec ticks
+            # print(len(data) % 16000)
+            if current_time - self.last_execution >= 0.4:
                 pause_status = self.vad.pause_status(data=self.data_array)
+                self.last_execution = current_time
+                print('Pause Status',pause_status)
             if pause_status: #if speech detected
                 print('[+] Pause Detected')
                 self.status=True

@@ -9,7 +9,7 @@ config["cuda_device"] = torch.device("cuda:0" if torch.cuda.is_available() else 
 config["local_flag"] = True # running on local machine or not
 
 # -------------- Transcriptor configs ------------#
-config["maximum_allowable_duration"] = 10 # max duration of input audio to transcribe in secon
+config["maximum_allowable_duration"] = 5 # max duration of input audio to transcribe in secon
 config["duration_threshold_delta"] = 1 # increase in duration thresold, for next iteration. 
 config["pause_time"] =  2 # time of silence identified as a large pause   (seconds)
 config["maximum_noresponse_duration"] = config["pause_time"] * 4  # max duration at the start of audio after which a no response is detected, should be greater than pause time

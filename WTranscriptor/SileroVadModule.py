@@ -10,6 +10,7 @@ vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
  _, read_audio,VADIterator,
  *_) = utils
 
+
 class SileroVadModule(object):
     '''
 
@@ -28,20 +29,24 @@ class SileroVadModule(object):
         '''
         self.vad_model = vad_model
         self.sample_rate = config.get("sample_rate", 16000)
-        self.vad_threshold=config.get("vad_threshold",0.6)
-        self.duration_threshold = config.get("duration_threshold", 3)
+        self.vad_threshold=config.get("vad_threshold",0.1)
+        self.duration_threshold = config.get("duration_threshold", 0.8)
+        print('Inside Silero')
 
     def get_pause_status(self,data):
         '''
         Get the Data and Check Voice Activity. If Duration Threshold frame is 
         empty return a Pause Status of True otherwise false.
         '''
+        # threshold=self.vad_threshold
         pause_status=False
         speech_dict = None
-        speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.sample_rate),threshold=self.vad_threshold)
+        speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.sample_rate))
+        
         if speech_dict: #if speech detected
             max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
             #if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
+            # print(((len(data)-max_end['end'])/self.sample_rate),self.duration_threshold)
             if ((len(data)-max_end['end'])/self.sample_rate) >= self.duration_threshold: #small pause detected;
                 pause_status = True
         return pause_status

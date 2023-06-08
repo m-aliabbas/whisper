@@ -5,6 +5,7 @@ class VAD_Interface(object):
         '''
         An Interface Between Transcriptor and VAD Module
         '''
+        print(' VAD Config',config)
         self.config = config
         self.vad = SileroVadModule(config=self.config)
     def pause_status(self,data):
