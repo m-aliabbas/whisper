@@ -83,7 +83,7 @@ class WTranscriptor(object):
             if current_time - self.last_execution >= 0.4:
                 pause_status = self.vad.pause_status(data=self.data_array)
                 self.last_execution = current_time
-                print('Pause Status',pause_status)
+                
             if pause_status: #if speech detected
                 print('[+] Pause Detected')
                 self.status=True
