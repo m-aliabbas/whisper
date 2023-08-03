@@ -46,7 +46,7 @@ class WTranscriptor(object):
         self.data_array = np.array([])
         self.cuda_device = config.get("cuda_device", "cpu")
         self.duration_threshold = config.get("duration_threshold", 0.8)  # after this many seconds, pass the data through the model
-        self.duration_threshold_delta = config.get("duration_threshold_delta", 1) # increase in duration thresold, for next iteration. 
+        self.duration_threshold_delta = config.get("duration_threshold_delta", 10) # increase in duration thresold, for next iteration. 
         if not "enum" in config:
             config["enum"] = dict()
         
