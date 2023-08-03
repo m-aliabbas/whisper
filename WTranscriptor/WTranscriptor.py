@@ -41,7 +41,7 @@ class WTranscriptor(object):
         print(self.config)
         self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
-        self.max_allowable_duration = config.get("maximum_allowable_duration", 5) # max duration of input audio to transcribe in seconds
+        self.max_allowable_duration = config.get("maximum_allowable_duration", 2) # max duration of input audio to transcribe in seconds
         self.samplerate = config.get("samplerate", 16000.0)
         self.data_array = np.array([])
         self.cuda_device = config.get("cuda_device", "cpu")
@@ -114,15 +114,15 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "/home/ali/Desktop/idrak_work/whisper/WTranscriptor/audios/20sec.wav"
+    filepath  = "audios/amy.wav"
     file_object =  sf.SoundFile(filepath)
-    blocksize = 8000
+    blocksize = 16000
     dtype = 'int16'
     samplerate = file_object.samplerate
     last_block_index = int(len(file_object)/blocksize)
     # added support for config
     config=dict()
-    config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"small.en"}
+    config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"base.en"}
     transcriptor = WTranscriptor(config)
     transcpt=''
     raw_data = file_object.buffer_read(blocksize, dtype=dtype)
