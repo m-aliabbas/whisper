@@ -41,11 +41,11 @@ class WTranscriptor(object):
         print(self.config)
         self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
-        self.max_allowable_duration = config.get("maximum_allowable_duration", 2) # max duration of input audio to transcribe in seconds
+        self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
         self.samplerate = config.get("samplerate", 16000.0)
         self.data_array = np.array([])
         self.cuda_device = config.get("cuda_device", "cpu")
-        self.duration_threshold = config.get("duration_threshold", 0.8)  # after this many seconds, pass the data through the model
+        self.duration_threshold = config.get("duration_threshold", 0.5)  # after this many seconds, pass the data through the model
         self.duration_threshold_delta = config.get("duration_threshold_delta", 10) # increase in duration thresold, for next iteration. 
         if not "enum" in config:
             config["enum"] = dict()
@@ -114,7 +114,7 @@ class WTranscriptor(object):
 # -- For testing the module independantly
 if __name__ == "__main__":
 
-    filepath  = "audios/amy.wav"
+    filepath  = "audios/backy.wav"
     file_object =  sf.SoundFile(filepath)
     blocksize = 16000
     dtype = 'int16'

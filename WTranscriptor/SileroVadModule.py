@@ -1,5 +1,5 @@
 import torch
-
+import audioop
 #------------------- For Voice Activity Detection Model Loading --------------
 #
 vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
@@ -41,7 +41,8 @@ class SileroVadModule(object):
         # threshold=self.vad_threshold
         pause_status=False
         speech_dict = None
-        speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.sample_rate))
+        # help(get_speech_timestamps)
+        speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.sample_rate),threshold=0.5)
         
         if speech_dict: #if speech detected
             max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
@@ -49,4 +50,15 @@ class SileroVadModule(object):
             # print(((len(data)-max_end['end'])/self.sample_rate),self.duration_threshold)
             if ((len(data)-max_end['end'])/self.sample_rate) >= self.duration_threshold: #small pause detected;
                 pause_status = True
+            if len(data) > 48000:
+                if audioop.rms(data[-16000:],2) < 7700:
+                    pause_status = True
+            
+        else:
+            try:
+                if len(data) >= 48000:
+                    # if audioop.rms(data[-16000:],2) < 8000:
+                    pause_status = True
+            except:
+                pass
         return pause_status
