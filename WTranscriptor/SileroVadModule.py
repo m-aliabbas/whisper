@@ -51,12 +51,13 @@ class SileroVadModule(object):
             if ((len(data)-max_end['end'])/self.sample_rate) >= self.duration_threshold: #small pause detected;
                 pause_status = True
             if len(data) > 48000:
-                if audioop.rms(data[-16000:],2) < 7700:
+                print(audioop.rms(data,2))
+                if audioop.rms(data[-20000:],2) < 10500:
                     pause_status = True
             
         else:
             try:
-                if len(data) >= 48000:
+                if len(data) >= 24000:
                     # if audioop.rms(data[-16000:],2) < 8000:
                     pause_status = True
             except:
