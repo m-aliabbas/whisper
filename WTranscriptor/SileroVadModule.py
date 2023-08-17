@@ -1,11 +1,20 @@
 import torch
 import audioop
+import os
 #------------------- For Voice Activity Detection Model Loading --------------
 #
-vad_model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+
+# /home/ali/.cache/torch/hub/snakers4_silero-vad_master
+os.environ['TORCH_HOME'] = '/home/ali/.cache/torch'
+vad_model, utils = torch.hub.load(repo_or_dir='/home/ali/.cache/torch/hub/snakers4_silero-vad_master',
+                                  source= 'local',
                               model='silero_vad',
                               force_reload=False)
 
+# vad_model, utils = torch.hub.load('snakers4/silero-vad',
+#                                   source='local',
+#                               model='silero_vad',
+#                               force_reload=False)
 (get_speech_timestamps,
  _, read_audio,VADIterator,
  *_) = utils
@@ -31,35 +40,62 @@ class SileroVadModule(object):
         self.sample_rate = config.get("sample_rate", 16000)
         self.vad_threshold=config.get("vad_threshold",0.1)
         self.duration_threshold = config.get("duration_threshold", 0.8)
+        self.audio_samples = []
+        self.thresold_rms = 2000
+        self.min_rms = float('inf')
+        self.max_rms = 0
+        self.decay_factor = 0.99
+        self.pause_counter = 0
+
         print('Inside Silero')
 
-    def get_pause_status(self,data):
+    def get_pause_status(self, data):
         '''
         Get the Data and Check Voice Activity. If Duration Threshold frame is 
         empty return a Pause Status of True otherwise false.
         '''
-        # threshold=self.vad_threshold
-        pause_status=False
+        pause_status = False
         speech_dict = None
-        # help(get_speech_timestamps)
-        speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.sample_rate),threshold=0.5)
+        # Assuming you have other initializations here
         
-        if speech_dict: #if speech detected
-            max_end = max(speech_dict, key=lambda x:x['end'])  #checking the end of speech
-            #if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
-            # print(((len(data)-max_end['end'])/self.sample_rate),self.duration_threshold)
-            if ((len(data)-max_end['end'])/self.sample_rate) >= self.duration_threshold: #small pause detected;
-                pause_status = True
-            if len(data) > 48000:
-                print(audioop.rms(data,2))
-                if audioop.rms(data[-20000:],2) < 10500:
-                    pause_status = True
+        # Calculate the RMS for the current data segment
+        current_rms = audioop.rms(data, 2)
+        
+        # Update the min and max RMS values
+        self.min_rms = min(self.min_rms, current_rms)
+        self.max_rms = max(self.max_rms, current_rms)
+
+        # Get speech timestamps using VAD
+        speech_dict = get_speech_timestamps(data, vad_model, sampling_rate=int(self.sample_rate), threshold=0.5)
+
+        if speech_dict:  # if speech detected
+            max_end = max(speech_dict, key=lambda x: x['end'])  # checking the end of speech
             
-        else:
-            try:
-                if len(data) >= 24000:
-                    # if audioop.rms(data[-16000:],2) < 8000:
+            # if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
+            if ((len(data) - max_end['end']) / self.sample_rate) >= self.duration_threshold:
+                print("Speech Pause Detected By VAD")
+                pause_status = True
+
+            if len(data) > 30000:
+                # Use RMS range to determine pause
+                
+                threshold = self.min_rms + (self.max_rms - self.min_rms) / 2
+                if current_rms < threshold:
+                    self.pause_counter += 1
+                   
+                else:
+                    self.pause_counter = 0
+                
+                if self.pause_counter >= 2:  # some_value could be 2, 3, etc. depending on your desired pause length
                     pause_status = True
-            except:
-                pass
+
+        else:
+            if len(data) >= 24000:
+                print('No Speech in first 1.5 S')
+                pause_status = True  # You might adjust this to also consider RMS range or other factors
+        
+        # Decay the min and max RMS over time for adaptability
+        self.min_rms = self.min_rms * self.decay_factor + current_rms * (1 - self.decay_factor)
+        self.max_rms = self.max_rms * self.decay_factor + current_rms * (1 - self.decay_factor)
+        
         return pause_status

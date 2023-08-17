@@ -57,7 +57,7 @@ class WTranscriptor(object):
         
         # self.warmup()
 
-    def push(self, raw_audio_block, pause_type=1, is_greedy=False, verbose=False,last_block=False):
+    def push(self, raw_audio_block, pause_type=1, is_greedy=False, verbose=False,last_block=False,max_duration=0.0):
         """
         The main function of the Transcriptor module. For an example usage, see the code in __main__ in Transcriptor.py
 
@@ -65,6 +65,10 @@ class WTranscriptor(object):
             raw_audio_block: Output from sounddevice raw stream of arbitrary blocksizey.
             
         """
+        check_for_pause = True
+        if max_duration != 0.0:
+            self.maximum_allowable_duration = max_duration
+            check_for_pause = False
         current_time = time.time()
         # print('I am inside push')
         gen_transcript = False
@@ -84,7 +88,7 @@ class WTranscriptor(object):
                 pause_status = self.vad.pause_status(data=self.data_array)
                 self.last_execution = current_time
                 
-            if pause_status: #if speech detected
+            if pause_status and check_for_pause: #if speech detected
                 print('[+] Pause Detected')
                 self.status=True
                 gen_transcript = True

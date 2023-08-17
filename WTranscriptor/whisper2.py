@@ -39,7 +39,9 @@ class WhisperTranscriptorAPI:
 
         self.model_path = model_path
         print(self.model_path)
-        self.model = WhisperModel(self.model_path, device="cuda", compute_type="int8_float16")#,num_worskers=5,cpu_threads=8
+        # device='cpu'
+        # compute_type="int8"
+        self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
         self.OUTPUT_DIR= "audios"
 
 
