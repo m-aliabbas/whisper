@@ -1,44 +1,22 @@
-import queue
 import sounddevice as sd
-from WTranscriptor import WTranscriptor
-import warnings
-warnings.filterwarnings('ignore')
+from KTranscriptor import KTranscriptor
+SAMPLE_RATE = 16000
+CHUNK = 4000  # 0.25 seconds per chunk
 
-class InputStreamer():
-    def __init__(self, device) -> None:
+def main():
+    transcriptor = KTranscriptor()
+
+    with sd.InputStream(samplerate=SAMPLE_RATE, channels=1) as stream:
+        print("Recording... Press Ctrl+C to stop.")
         try:
-            self.q = queue.Queue()
-            input_dev = device
-            self.in_stream = sd.RawInputStream(samplerate=16000, blocksize = 8000, device=input_dev, dtype='int16',
-                                            channels=1, callback=self.in_callback)
-            print('Done_Constructing')
-        except ValueError:
-            print("Error! Kindly check the name of the input device (virtual cable).")
-            exit()
-        except Exception as e:
-            print("Error!", e)
-    def in_callback(self, indata, frames, time, status):
-        self.q.put(bytes(indata))
-    def refresh(self):
-        self.q = queue.Queue()
-        
-def get_transcript(in_stream_obj, transcriptor):
-    in_stream_obj.in_stream.start()
-    transcriptor.refresh()
-    rawData = in_stream_obj.q.get() # geting raw data of callee from the q for processing
-    # print(rawData)
-    while (not transcriptor.push(rawData, pause_type="small", verbose=False)):
-        rawData = in_stream_obj.q.get()
-        # print(rawData)
-    result = transcriptor.transcript
-    transcriptor.refresh()
-    return result
+            while True:
+                audio_chunk, overflowed = stream.read(CHUNK)
+                if transcriptor.push(audio_chunk,pause_length=1):
+                    print("Transcription: ", transcriptor.transcript)
+        except KeyboardInterrupt:
+            pass
 
-input_idx = 7 #ali_system device
-config=dict()
-transcriptor = WTranscriptor(config=config)
-input_stream_obj = InputStreamer(device=input_idx)
-print("[+++] Everything loaded")
-transcript=get_transcript(in_stream_obj=input_stream_obj,transcriptor=transcriptor)
-print("[+++] Function Completed")
-print(f"[+++] {transcript}")
+    print("Final transcript:", transcriptor.transcript)
+
+if __name__ == '__main__':
+    main()
