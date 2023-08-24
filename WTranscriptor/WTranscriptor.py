@@ -71,12 +71,12 @@ class WTranscriptor(object):
         if max_duration != 0.0:
             self.max_allowable_duration = max_duration
             check_for_pause = False
-            print(f"listening for {self.max_allowable_duration} hard coded, no pause will work")
+            # print(f"listening for {self.max_allowable_duration} hard coded, no pause will work")
         
         
         if check_for_pause:
             self.max_allowable_duration = self.default_allowable_duration
-            print(f"listening for {self.max_allowable_duration}s or pause")
+            # print(f"listening for {self.max_allowable_duration}s or pause")
         current_time = time.time()
         # print('I am inside push')
         gen_transcript = False

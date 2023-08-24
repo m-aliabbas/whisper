@@ -72,7 +72,7 @@ class SileroVadModule(object):
             
             # if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
             if ((len(data) - max_end['end']) / self.sample_rate) >= self.duration_threshold:
-                print("Speech Pause Detected By VAD")
+                # print("Speech Pause Detected By VAD")
                 pause_status = True
 
             if len(data) > 30000:
@@ -90,7 +90,7 @@ class SileroVadModule(object):
 
         else:
             if len(data) >= 32000:
-                print('No Speech in 2s')
+                # print('No Speech in 2s')
                 pause_status = True  # You might adjust this to also consider RMS range or other factors
         
         # Decay the min and max RMS over time for adaptability
