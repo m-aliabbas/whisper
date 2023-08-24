@@ -42,11 +42,13 @@ class WTranscriptor(object):
         self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
         self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
+        self.default_allowable_duration = self.max_allowable_duration
         self.samplerate = config.get("samplerate", 16000.0)
         self.data_array = np.array([])
         self.cuda_device = config.get("cuda_device", "cpu")
         self.duration_threshold = config.get("duration_threshold", 0.5)  # after this many seconds, pass the data through the model
         self.duration_threshold_delta = config.get("duration_threshold_delta", 10) # increase in duration thresold, for next iteration. 
+        
         if not "enum" in config:
             config["enum"] = dict()
         
@@ -70,7 +72,10 @@ class WTranscriptor(object):
             self.max_allowable_duration = max_duration
             check_for_pause = False
             print(f"listening for {self.max_allowable_duration} hard coded, no pause will work")
+        
+        
         if check_for_pause:
+            self.max_allowable_duration = self.default_allowable_duration
             print(f"listening for {self.max_allowable_duration}s or pause")
         current_time = time.time()
         # print('I am inside push')
