@@ -67,8 +67,11 @@ class WTranscriptor(object):
         """
         check_for_pause = True
         if max_duration != 0.0:
-            self.maximum_allowable_duration = max_duration
+            self.max_allowable_duration = max_duration
             check_for_pause = False
+            print(f"listening for {self.max_allowable_duration} hard coded, no pause will work")
+        if check_for_pause:
+            print(f"listening for {self.max_allowable_duration}s or pause")
         current_time = time.time()
         # print('I am inside push')
         gen_transcript = False
@@ -84,15 +87,16 @@ class WTranscriptor(object):
             data = self.data_array
             #passing data from VAD Model
             # print(len(data) % 16000)
-            if current_time - self.last_execution >= 0.4:
-                pause_status = self.vad.pause_status(data=self.data_array)
-                self.last_execution = current_time
-                
-            if pause_status and check_for_pause: #if speech detected
-                print('[+] Pause Detected')
-                self.status=True
-                gen_transcript = True
-
+            if check_for_pause:
+                if current_time - self.last_execution >= 0.4:
+                    pause_status = self.vad.pause_status(data=self.data_array)
+                    self.last_execution = current_time
+                    
+                if pause_status: #if speech detected
+                    print('[+] Pause Detected')
+                    self.status=True
+                    gen_transcript = True
+                    
             if duration > self.max_allowable_duration: #10 second acheived
                 print("[-] Max Limit Exceed")
                 self.status = True

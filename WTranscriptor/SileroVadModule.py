@@ -5,16 +5,15 @@ import os
 #
 
 # /home/ali/.cache/torch/hub/snakers4_silero-vad_master
-os.environ['TORCH_HOME'] = '/home/ali/.cache/torch'
-vad_model, utils = torch.hub.load(repo_or_dir='/home/ali/.cache/torch/hub/snakers4_silero-vad_master',
-                                  source= 'local',
-                              model='silero_vad',
-                              force_reload=False)
-
-# vad_model, utils = torch.hub.load('snakers4/silero-vad',
-#                                   source='local',
+os.environ['TORCH_HOME'] = '/home/mohammadali/.cache/torch'
+# vad_model, utils = torch.hub.load(repo_or_dir='/home/ali/.cache/torch/hub/snakers4_silero-vad_master',
+#                                   source= 'local',
 #                               model='silero_vad',
 #                               force_reload=False)
+
+vad_model, utils = torch.hub.load('snakers4/silero-vad',
+                              model='silero_vad',
+                              force_reload=False)
 (get_speech_timestamps,
  _, read_audio,VADIterator,
  *_) = utils
@@ -90,8 +89,8 @@ class SileroVadModule(object):
                     pause_status = True
 
         else:
-            if len(data) >= 24000:
-                print('No Speech in first 1.5 S')
+            if len(data) >= 32000:
+                print('No Speech in 2s')
                 pause_status = True  # You might adjust this to also consider RMS range or other factors
         
         # Decay the min and max RMS over time for adaptability
