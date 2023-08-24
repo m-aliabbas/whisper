@@ -75,7 +75,7 @@ class SileroVadModule(object):
                 # print("Speech Pause Detected By VAD")
                 pause_status = True
 
-            if len(data) > 30000:
+            if len(data) > 48000:
                 # Use RMS range to determine pause
                 
                 threshold = self.min_rms + (self.max_rms - self.min_rms) / 2
@@ -89,7 +89,7 @@ class SileroVadModule(object):
                     pause_status = True
 
         else:
-            if len(data) >= 32000:
+            if len(data) >= 40000:
                 # print('No Speech in 2s')
                 pause_status = True  # You might adjust this to also consider RMS range or other factors
         

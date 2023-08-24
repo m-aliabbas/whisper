@@ -70,7 +70,7 @@ class WTranscriptor(object):
         check_for_pause = True
         if max_duration != 0.0:
             self.max_allowable_duration = max_duration
-            check_for_pause = False
+            # check_for_pause = False
             # print(f"listening for {self.max_allowable_duration} hard coded, no pause will work")
         
         

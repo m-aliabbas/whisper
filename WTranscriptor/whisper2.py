@@ -5,6 +5,7 @@ import numpy as np
 from pydub import AudioSegment
 from scipy.io.wavfile import write
 import warnings
+import torch
 import os
 warnings.filterwarnings('ignore')
 
@@ -41,7 +42,18 @@ class WhisperTranscriptorAPI:
         print(self.model_path)
         # device='cpu'
         # compute_type="int8"
-        self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print(device == "cuda" , "cuda check")
+        if device == 'cuda':
+            print("[INFO] Loading on Cuda")
+            try:
+                self.model = WhisperModel(self.model_path, device="cuda", compute_type="float16")
+            except ValueError:
+                print("[INFO] Cuda Support Issue Moving to CPU")
+                self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
+        else:
+            print("[INFO] Loading on CPU")
+            self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
         self.OUTPUT_DIR= "audios"
 
 
