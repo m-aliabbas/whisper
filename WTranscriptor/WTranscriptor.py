@@ -121,7 +121,7 @@ class WTranscriptor(object):
             self.status=True
         
         if no_response_flag:
-            temp_transcript = ('' , [])
+            temp_transcript = ([], '')
             self.transcript = temp_transcript
             self.status = True
         
