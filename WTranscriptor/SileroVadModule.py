@@ -1,6 +1,7 @@
 import torch
 import audioop
 import os
+import enums
 #------------------- For Voice Activity Detection Model Loading --------------
 #
 
@@ -73,7 +74,7 @@ class SileroVadModule(object):
             # if current data frame and last speech index gap is larger than 48000 i.e. 3 sec
             if ((len(data) - max_end['end']) / self.sample_rate) >= self.duration_threshold:
                 # print("Speech Pause Detected By VAD")
-                pause_status = True
+                return enums.PAUSE
 
             if len(data) > 48000:
                 # Use RMS range to determine pause
@@ -86,7 +87,10 @@ class SileroVadModule(object):
                     self.pause_counter = 0
                 
                 if self.pause_counter >= 2:  # some_value could be 2, 3, etc. depending on your desired pause length
-                    pause_status = True
+                    return enums.PAUSE
+                elif self.pause_counter >=1:
+                    return enums.GUESTURE_OF_LISTENING
+
 
         else:
             if len(data) >= 40000:
@@ -97,4 +101,4 @@ class SileroVadModule(object):
         self.min_rms = self.min_rms * self.decay_factor + current_rms * (1 - self.decay_factor)
         self.max_rms = self.max_rms * self.decay_factor + current_rms * (1 - self.decay_factor)
         
-        return pause_status
+        return enums.NO_RESPONSE

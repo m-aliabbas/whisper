@@ -7,6 +7,7 @@ import sounddevice as sd
 import math
 import time
 from VAD_Interface import VAD_Interface
+import enums
 
 class WTranscriptor(object):
     """
@@ -82,10 +83,11 @@ class WTranscriptor(object):
         gen_transcript = False
         #obtaining audio from bytes
         tmp_np = self.byte2np(raw_audio_block)
-        pause_status = False
+        pause_status = enums.NORMAL_STATUS # -1000
         self.data_array = np.hstack((self.data_array,tmp_np))
         duration  = len(self.data_array) / self.samplerate #duration 16000/16000=1s\
         speech_dict=None
+        no_response_flag = False
         
         if duration >= self.duration_threshold: #if duration is larger than 3s
             # print(duration,self.duration_threshold)
@@ -97,10 +99,15 @@ class WTranscriptor(object):
                     pause_status = self.vad.pause_status(data=self.data_array)
                     self.last_execution = current_time
                     
-                if pause_status: #if speech detected
+                if pause_status == enums.PAUSE: #if speech detected
                     print('[+] Pause Detected')
                     self.status=True
                     gen_transcript = True
+                elif pause_status == enums.NO_RESPONSE:
+                    self.status = True
+                    gen_transcript = False
+                    no_response_flag = True
+
                     
             if duration > self.max_allowable_duration: #10 second acheived
                 print("[-] Max Limit Exceed")
@@ -108,10 +115,15 @@ class WTranscriptor(object):
                 gen_transcript = True
         
         if gen_transcript or last_block: #if last block of file or condition of pause or max duration meet
+            
             transcript = self.asr.get_transcript(self.data_array)
             self.transcript = transcript
             self.status=True
-            
+        
+        if no_response_flag:
+            self.transcript = ''
+            self.status = True
+        
         return self.status
 
     def refresh(self):
