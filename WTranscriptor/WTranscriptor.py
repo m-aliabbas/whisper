@@ -103,9 +103,10 @@ class WTranscriptor(object):
                     print('[+] Pause Detected')
                     self.status=True
                     gen_transcript = True
+
                 elif pause_status == enums.NO_RESPONSE:
                     self.status = True
-                    gen_transcript = False
+                    gen_transcript = True
                     no_response_flag = True
 
                     

@@ -96,9 +96,10 @@ class SileroVadModule(object):
             if len(data) >= 40000:
                 # print('No Speech in 2s')
                 pause_status = True  # You might adjust this to also consider RMS range or other factors
+                return enums.NO_RESPONSE
         
         # Decay the min and max RMS over time for adaptability
         self.min_rms = self.min_rms * self.decay_factor + current_rms * (1 - self.decay_factor)
         self.max_rms = self.max_rms * self.decay_factor + current_rms * (1 - self.decay_factor)
         
-        return enums.NO_RESPONSE
+        return enums.NO_PAUSE
