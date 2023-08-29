@@ -30,7 +30,7 @@ class WhisperTranscriptorAPI:
     '''
     #----------------------- constructor -------------------------------------
     #
-    def __init__(self,model_path='',file_processing=False,word_timestamp=True):
+    def __init__(self,model_path='openai/whisper-tiny.en',file_processing=False,word_timestamp=True):
 
         '''
         1) Defining processor for processing audio input for Whisper and
@@ -42,7 +42,7 @@ class WhisperTranscriptorAPI:
           ... i.e. for example: openai/whisper-tiny.en 
         '''
 
-        self.model_path = model_path
+        self.model_path = 'openai/whisper-tiny.en'
         self.processor = WhisperProcessor.from_pretrained(self.model_path) 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.device = torch.device('cpu')
@@ -121,6 +121,7 @@ class WhisperTranscriptorAPI:
         with torch.inference_mode():
             generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 
+        print(help(self.processor.batch_decode))
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
         return transcription,generated_ids
 
@@ -185,13 +186,19 @@ class WhisperTranscriptorAPI:
         Generate transcript usign a numpy array given as inpuy 
         '''
         wave = wave / np.iinfo(np.int16).max #normalize
+        t1 = timeit.default_timer()
         inputs = self.processor(wave, return_tensors="pt",sampling_rate=16000) #tokenize
         input_features = inputs.input_features.to(self.device)
         # print(input_features.to(self.device))
         with torch.inference_mode():
+            print(help(self.model.generate))
             generated_ids = self.model.generate(inputs=input_features)
         #decode the transcript using language model from processor 
+        
         transcription = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        t2 = timeit.default_timer()
+        print('Time taking for response',t2-t1)
+        print('Audio Length',len(wave)/16000)
         return transcription,generated_ids
     
     def generate_features_only(self,wave):

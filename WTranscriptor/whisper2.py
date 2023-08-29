@@ -133,10 +133,11 @@ class WhisperTranscriptorAPI:
         '''
         Generate transcript usign a numpy array given as inpuy 
         '''
-
+        beam_size=None
+        best_of=3
         wave = wave / np.iinfo(np.int16).max #normalize
         t1 = timeit.default_timer()
-        segments, info = self.model.transcribe(wave, beam_size=1,without_timestamps=True,language='en',)
+        segments, info = self.model.transcribe(wave, beam_size=5, best_of=3,without_timestamps=True,language='en',)
         transcription = ""
         for segment in segments:
             transcription += segment.text
