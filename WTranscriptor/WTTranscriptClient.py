@@ -142,7 +142,7 @@ class WTranscriptorClient(object):
         return np.frombuffer(data, dtype='int16')
     
     async def send_to_server(self, data):
-        async with websockets.connect('ws://localhost:8000/ws') as websocket:
+        async with websockets.connect('ws://110.93.240.107:8080/ws') as websocket:
             await websocket.send(data)
             response = await websocket.recv()
             return response

@@ -116,8 +116,9 @@ class WTranscriptor(object):
                 gen_transcript = True
         
         if gen_transcript or last_block: #if last block of file or condition of pause or max duration meet
-            
+            print(self.data_array)
             transcript = self.asr.get_transcript(self.data_array)
+            print(transcript)
             self.transcript = transcript
             self.status=True
         
