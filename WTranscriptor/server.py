@@ -7,23 +7,22 @@ import numpy as np
 import json
 
 from WTranscriptor import WTranscriptor
-# config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"tiny.en"}
-# asr = ASR(config) 
-# app = FastAPI()
-# print('Yes')
+config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"tiny.en"}
+asr = ASR(config) 
+app = FastAPI()
 
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     try:
-#         while True:
-#             data = await websocket.receive_text()
-#             numpy_array = np.array(json.loads(data))
-#             transcript = asr.get_transcript(numpy_array)
-#             print(transcript)
-#             await websocket.send_text(transcript[1])
-#     except WebSocketDisconnect:
-#         print("WebSocket disconnected")
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            numpy_array = np.array(json.loads(data))
+            transcript = asr.get_transcript(numpy_array)
+            print(transcript)
+            await websocket.send_text(transcript[1])
+    except WebSocketDisconnect:
+        print("WebSocket disconnected")
 
 
 # app = FastAPI()
@@ -83,43 +82,43 @@ from WTranscriptor import WTranscriptor
 
 
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+# from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-app = FastAPI()
+# app = FastAPI()
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections = []
+# class ConnectionManager:
+#     def __init__(self):
+#         self.active_connections = []
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
+#     async def connect(self, websocket: WebSocket):
+#         await websocket.accept()
+#         self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+#     def disconnect(self, websocket: WebSocket):
+#         self.active_connections.remove(websocket)
 
-manager = ConnectionManager()
-config = {"sample_rate":16000, "duration_threshold":3, "vad_threshold":0.6, "model_path":"base.en"}
-transcriptor = WTranscriptor(config)
+# manager = ConnectionManager()
+# config = {"sample_rate":16000, "duration_threshold":3, "vad_threshold":0.6, "model_path":"base.en"}
+# transcriptor = WTranscriptor(config)
 
-@app.websocket("/audio/")
-async def audio_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
+# @app.websocket("/audio/")
+# async def audio_endpoint(websocket: WebSocket):
+#     await manager.connect(websocket)
+#     try:
         
-        while True:
-            audio_data = await websocket.receive_bytes()
-            # Replace with your actual WTranscriptor's push method
-            status = transcriptor.push(audio_data)
+#         while True:
+#             audio_data = await websocket.receive_bytes()
+#             # Replace with your actual WTranscriptor's push method
+#             status = transcriptor.push(audio_data)
 
-            if status:
-                transcript_data = transcriptor.transcript
-                transcriptor.refresh()
-                await websocket.send_text(f"True|{transcript_data}")
-            else:
-                await websocket.send_text("False")
+#             if status:
+#                 transcript_data = transcriptor.transcript
+#                 transcriptor.refresh()
+#                 await websocket.send_text(f"True|{transcript_data}")
+#             else:
+#                 await websocket.send_text("False")
 
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        print("WebSocket disconnected.")
+#     except WebSocketDisconnect:
+#         manager.disconnect(websocket)
+#         print("WebSocket disconnected.")
 
