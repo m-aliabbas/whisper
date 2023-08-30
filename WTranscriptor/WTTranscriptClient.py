@@ -45,6 +45,7 @@ class WTranscriptorClient(object):
         print(self.config)
         # self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
+        self.server_address = config.get("server_address","ws://127.0.0.1:8000/ws")
         self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
         self.default_allowable_duration = self.max_allowable_duration
         self.samplerate = config.get("samplerate", 16000.0)
@@ -52,7 +53,11 @@ class WTranscriptorClient(object):
         self.cuda_device = config.get("cuda_device", "cpu")
         self.duration_threshold = config.get("duration_threshold", 0.5)  # after this many seconds, pass the data through the model
         self.duration_threshold_delta = config.get("duration_threshold_delta", 10) # increase in duration thresold, for next iteration. 
-        
+        try:
+            self.websocket = asyncio.get_event_loop().run_until_complete(self.connect_to_server())
+        except Exception as e:
+            print(f"Failed to establish WebSocket connection: {e}")
+            self.websocket = None
         if not "enum" in config:
             config["enum"] = dict()
         
@@ -141,11 +146,30 @@ class WTranscriptorClient(object):
     def byte2np(self, data):
         return np.frombuffer(data, dtype='int16')
     
+    
+    async def connect_to_server(self):
+        return await websockets.connect(self.server_address)
+    
+    # async def send_to_server(self, data):
+    #     async with websockets.connect('ws://110.93.240.107:8080/ws') as websocket:
+    #         await websocket.send(data)
+    #         response = await websocket.recv()
+    #         return response
+        
     async def send_to_server(self, data):
-        async with websockets.connect('ws://localhost:8000/ws') as websocket:
-            await websocket.send(data)
-            response = await websocket.recv()
+        try:
+            await self.websocket.send(data)
+            response = await self.websocket.recv()
             return response
+        except websockets.ConnectionClosed as e:
+            print(f"WebSocket connection was closed: {e}")
+            # Reconnect logic could go here
+            self.websocket = await self.connect_to_server()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            # Handle or re-throw the exception
+
+
 
 
 # -- For testing the module independantly

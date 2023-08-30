@@ -5,24 +5,44 @@ import sounddevice as sd
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import numpy as np
 import json
-
+from typing import List
 from WTranscriptor import WTranscriptor
 config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"tiny.en"}
 asr = ASR(config) 
 app = FastAPI()
 
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    async def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_data(self, data: str, websocket: WebSocket):
+        await websocket.send_text(data)
+
+manager = ConnectionManager()
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
+    await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
             numpy_array = np.array(json.loads(data))
             transcript = asr.get_transcript(numpy_array)
-            print(transcript)
-            await websocket.send_text(transcript[1])
+
+            await manager.send_data(transcript[1], websocket)
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
         print("WebSocket disconnected")
+
+
 
 
 # app = FastAPI()
