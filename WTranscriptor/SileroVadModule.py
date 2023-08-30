@@ -6,7 +6,7 @@ import enums
 #
 
 # /home/ali/.cache/torch/hub/snakers4_silero-vad_master
-os.environ['TORCH_HOME'] = '/home/mohammadali/.cache/torch'
+# os.environ['TORCH_HOME'] = '/home/mohammadali/.cache/torch'
 # vad_model, utils = torch.hub.load(repo_or_dir='/home/ali/.cache/torch/hub/snakers4_silero-vad_master',
 #                                   source= 'local',
 #                               model='silero_vad',

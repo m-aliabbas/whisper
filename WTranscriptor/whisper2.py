@@ -45,9 +45,9 @@ class WhisperTranscriptorAPI:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         print(device == "cuda" , "cuda check")
         if device == 'cuda':
-            print("[INFO] Loading on Cuda")
+            print(f"[INFO] Loading {self.model_path} on Cuda")
             try:
-                self.model = WhisperModel(self.model_path, device="cuda", compute_type="float16")
+                self.model = WhisperModel(self.model_path, device="cuda", compute_type="int8_float16")
             except ValueError:
                 print("[INFO] Cuda Support Issue Moving to CPU")
                 self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
