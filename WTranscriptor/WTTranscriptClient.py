@@ -43,7 +43,7 @@ class WTranscriptorClient(object):
         
         self.config = config
         print(self.config)
-        self.asr = ASR(config) 
+        # self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
         self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
         self.default_allowable_duration = self.max_allowable_duration
@@ -142,7 +142,7 @@ class WTranscriptorClient(object):
         return np.frombuffer(data, dtype='int16')
     
     async def send_to_server(self, data):
-        async with websockets.connect('ws://192.168.100.100:8080/ws') as websocket:
+        async with websockets.connect('ws://localhost:8000/ws') as websocket:
             await websocket.send(data)
             response = await websocket.recv()
             return response

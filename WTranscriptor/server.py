@@ -7,7 +7,7 @@ import numpy as np
 import json
 
 
-config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"base.en"}
+config = {"sample_rate":16000,"duration_threshold":3,"vad_threshold":0.6,"model_path":"tiny.en"}
 asr = ASR(config) 
 app = FastAPI()
 print('Yes')
