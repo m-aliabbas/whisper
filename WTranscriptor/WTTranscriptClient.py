@@ -45,7 +45,7 @@ class WTranscriptorClient(object):
         print(self.config)
         # self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
-        self.server_address = config.get("server_address","ws://127.0.0.1:8000/ws")
+        self.server_address = config.get("server_address","ws://110.93.240.107:8080/ws")
         self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
         self.default_allowable_duration = self.max_allowable_duration
         self.samplerate = config.get("samplerate", 16000.0)

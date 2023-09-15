@@ -90,6 +90,7 @@ class SileroVadModule(object):
                     return enums.PAUSE
                 elif self.pause_counter >=1:
                     return enums.GUESTURE_OF_LISTENING
+                
 
 
         else:

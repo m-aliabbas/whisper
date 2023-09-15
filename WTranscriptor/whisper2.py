@@ -53,7 +53,8 @@ class WhisperTranscriptorAPI:
                 self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
         else:
             print("[INFO] Loading on CPU")
-            self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8")#,num_worskers=5,cpu_threads=8
+            self.model = WhisperModel(self.model_path, device="cpu", compute_type="int8",
+                                      cpu_threads=8,num_workers=8)#,num_worskers=5,cpu_threads=8
         self.OUTPUT_DIR= "audios"
 
 
@@ -109,7 +110,8 @@ class WhisperTranscriptorAPI:
         if exten == '.mp3':
             self.audio_path = self.convert_to_wav(self.audio_path)
         
-        segments, info = self.model.transcribe(self.audio_path, beam_size=1,without_timestamps=True,language='en')
+        segments, info = self.model.transcribe(self.audio_path, beam_size=1,
+                                               best_of=1,without_timestamps=True,language='en')
         transcription = ""
         for segment in segments:
             transcription += segment.text

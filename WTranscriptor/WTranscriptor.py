@@ -116,17 +116,22 @@ class WTranscriptor(object):
                 gen_transcript = True
         
         if gen_transcript or last_block: #if last block of file or condition of pause or max duration meet
-            print(self.data_array)
+            # print(self.data_array)
             transcript = self.asr.get_transcript(self.data_array)
-            print(transcript)
+
+            print(transcript,len(transcript[1]))
             self.transcript = transcript
             self.status=True
         
         if no_response_flag:
             temp_transcript = ([], '')
-            self.transcript = temp_transcript
-            self.status = True
-        
+            if len(self.transcript[1]) < 5 and ('you' in self.transcript[1].lower()): 
+                self.transcript = temp_transcript
+            elif len(self.transcript[1]) < 12 and ('thank you' in self.transcript[1].lower()):
+                self.transcript = temp_transcript
+            else:
+                self.transcript = self.transcript
+            
         return self.status
 
     def refresh(self):
