@@ -3,6 +3,9 @@ import torch
 from WTranscriptor import enums as Trans_enums
 config = dict()
 
+
+CLASSIFIER_PATH = '/home/idrak/ali_own/farooq/'
+
 # -------------- General configs ------------#
 config["samplerate"] = 16000
 config["cuda_device"] = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
