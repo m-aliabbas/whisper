@@ -9,3 +9,5 @@ soundfile==0.11.0
 stable_ts==1.1.4
 transformers==4.25.1
 whisper==1.1.10
+faster-whisper 
+fastapi[all]
