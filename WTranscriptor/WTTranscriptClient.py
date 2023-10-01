@@ -11,6 +11,8 @@ import enums
 import json
 import asyncio
 import websockets
+import websockets
+from typing import Union, List, Tuple
 
 class WTranscriptorClient(object):
     """
@@ -45,7 +47,7 @@ class WTranscriptorClient(object):
         print(self.config)
         # self.asr = ASR(config) 
         self.vad = VAD_Interface(config=config)
-        self.server_address = config.get("server_address","ws://110.93.240.107:8080/ws")
+        self.server_address = config.get("server_address","ws://127.0.0.1:8080/ws")
         self.max_allowable_duration = config.get("maximum_allowable_duration", 10) # max duration of input audio to transcribe in seconds
         self.default_allowable_duration = self.max_allowable_duration
         self.samplerate = config.get("samplerate", 16000.0)
@@ -156,18 +158,27 @@ class WTranscriptorClient(object):
     #         response = await websocket.recv()
     #         return response
         
-    async def send_to_server(self, data):
-        try:
-            await self.websocket.send(data)
-            response = await self.websocket.recv()
-            return response
-        except websockets.ConnectionClosed as e:
-            print(f"WebSocket connection was closed: {e}")
-            # Reconnect logic could go here
-            self.websocket = await self.connect_to_server()
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            # Handle or re-throw the exception
+    async def send_to_server(self, data: Union[str, bytes]) -> str:
+            try:
+                await self.websocket.send(data)
+                response = await self.websocket.recv()
+                parsed_response = json.loads(response)
+
+                # Handle the structured response from the server
+                if parsed_response.get("status") == "success":
+                    return parsed_response.get("transcript", "")
+                else:
+                    print(f"Server responded with an error: {parsed_response.get('error', 'Unknown error')}")
+                    return ""
+
+            except websockets.ConnectionClosed as e:
+                print(f"WebSocket connection was closed: {e}")
+                # Reconnect logic could go here
+                self.websocket = await self.connect_to_server()
+                return ""
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                return ""
 
 
 

@@ -119,7 +119,7 @@ class WTranscriptor(object):
             # print(self.data_array)
             transcript = self.asr.get_transcript(self.data_array)
 
-            print(transcript,len(transcript[1]))
+            # print(transcript,len(transcript[1]))
             self.transcript = transcript
             self.status=True
         

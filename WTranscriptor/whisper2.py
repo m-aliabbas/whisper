@@ -144,8 +144,8 @@ class WhisperTranscriptorAPI:
         for segment in segments:
             transcription += segment.text
         t2 = timeit.default_timer()
-        print('Time taking for response',t2-t1)
-        print('Audio Length',len(wave)/16000)
+        # print('Time taking for response',t2-t1)
+        # print('Audio Length',len(wave)/16000)
         return transcription,[]
     
 
