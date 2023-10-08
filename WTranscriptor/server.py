@@ -113,7 +113,7 @@ async def websocket_endpoint(websocket: WebSocket):
 #         print(f"Error occurred: {e}")
 
 
-@app.websocket("/ws_classify")
+@app.websocket("/asr_classify")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
