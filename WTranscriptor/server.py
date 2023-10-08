@@ -1,12 +1,15 @@
 # Standard Library Imports
 from typing import List
 import json
+import timeit
 from classification_utils.path_config import *
 import sys
 sys.path.append(CLASSIFIER_MODULE_PATH)
 # External Libraries
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 import numpy as np
 from WhisperASR import ASR
 from classification_utils.utils import *
@@ -108,4 +111,65 @@ async def websocket_endpoint(websocket: WebSocket):
         print("WebSocket disconnected")
     except Exception as e:
         print(f"Error occurred: {e}")
+
+
+@app.post("/asr_process")
+async def process_asr(request: Request):
+    try:
+        # Receive JSON data
+        data = await request.json()
+        # print(data)
+        # Check if 'audio_data' key is in the received data
+        if "audio_data" not in data:
+            raise HTTPException(status_code=400, detail="audio_data key not found in request body")
+        # numpy_array = np.array(json.loads(data["audio_data"]))
+        # print(numpy_array)
+        # Convert received data to numpy array
+        numpy_array = np.array(data["audio_data"])
+
+        # Get transcript
+        transcript = asr.get_transcript(numpy_array)
+        
+        # Return a structured response
+        response_data = {
+            "status": "success",
+            "transcript": transcript[1]
+        }
+        return JSONResponse(content=response_data)
+    except Exception as e:
+        return HTTPException(status_code=500, detail=f"Error occurred: {e}")
+    
+@app.post("/asr_classify")
+async def classify_asr(request: Request):
+    t1 = timeit.timeit()
+    # Receive JSON data
+    data = await request.json()
+    # print(data)
+    # Check if 'audio_data' key is in the received data
+    if "audio_data" not in data:
+        raise HTTPException(status_code=400, detail="audio_data key not found in request body")
+
+    # Convert received data to numpy array
+    numpy_array = np.array(json.loads(data["audio_data"]))
+
+    # Get transcript
+    temp_transcript = [[], '']
+    classification_result = ''
+    transcript = asr.get_transcript(numpy_array)
+    # print(transcript)
+    if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
+        transcript = temp_transcript
+    elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
+        transcript = temp_transcript
+    else:
+        transcript = transcript
+        classification_result = get_classification(transcript[1])
+    t2 = timeit.timeit()
+    print('Time taken', t2-t1)
+    # Return a structured response
+    response_data = {
+        "status": "success",
+        "transcript": {'transcript':transcript[1], 'intent':classification_result}
+    }
+    return JSONResponse(content=response_data)
 
