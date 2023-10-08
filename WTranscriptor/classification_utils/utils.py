@@ -1,6 +1,7 @@
 from classification_utils.path_config import *
 import sys
 sys.path.append(CLASSIFIER_MODULE_PATH)
+sys.path.append(NER_PATH)
 
 from word2number import w2n
 import random
@@ -14,7 +15,9 @@ import re
 smart_classifier = Smart(base_path=CLASSIFIER_MODULE_PATH,model_path=f'files/{MODEL_NAME}/modal',
                          mapping_dict_path = f'files/{MODEL_NAME}/modal/map.csv')
 dull_classifier = Dull(base_path=CLASSIFIER_MODULE_PATH)
-extractor = Extractor(base_path=CLASSIFIER_MODULE_PATH)
+extractor = Extractor(base_path=CLASSIFIER_MODULE_PATH,
+                      model_path=f'files/{NER_PATH}/',
+                      mapping_dict_path=f'files/{NER_PATH}/map.csv')
 
 
 def extract_and_convert_number(text):
@@ -123,3 +126,19 @@ def get_classification(transcript,verbose=False):
         return result['final_intent']
     except Exception as e:
         print(f'Error {e}')
+
+
+def get_entity(transcript,verbose=False):
+    # print('inside classification')
+    try:
+        result = extractor.predict(transcript,ENTITY_LIST)
+        filtered_list = [entry['word'] for entry in result if entry['entity'] in ENTITY_LIST]
+        text_result = ' '.join(filtered_list)
+        number = extract_and_convert_number(text_result)
+        if number:
+            return number
+        else:
+            return None
+    except Exception as e:
+        print(f'Error {e}')
+        return None

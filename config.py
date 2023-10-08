@@ -4,7 +4,7 @@ from WTranscriptor import enums as Trans_enums
 config = dict()
 
 
-CLASSIFIER_PATH = '/home/idrak/ali_own/farooq/'
+CLASSIFIER_PATH = '/home/mohammadali/Desktop/waspak.co/farooq'
 
 # -------------- General configs ------------#
 config["samplerate"] = 16000
@@ -23,7 +23,7 @@ config["one_sec_chunk_size"] =  50 # Chunck of Wav2Vec emissions equal to one se
 config["decoder_type"] =   "beam"   #currently supports beam and greedy
 
 #--------------- Whisper ASR model configs ----------------#
-config["model_path"] =   "openai/whisper-small.en"
+config["model_path"] =   "openai/whisper-tiny.en"
 
 # -------------- Decoder configs ------------#
 if config["decoder_type"] == "beam":
