@@ -75,45 +75,45 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error occurred: {e}")
 
-@app.websocket("/ws_classify")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
+# @app.websocket("/ws_classify")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await manager.connect(websocket)
+#     try:
+#         while True:
+#             data = await websocket.receive_text()
             
-            # Convert received data to numpy array
-            numpy_array = np.array(json.loads(data))
+#             # Convert received data to numpy array
+#             numpy_array = np.array(json.loads(data))
             
-            # Get transcript
-            temp_transcript = [[], '']
-            classification_result = ''
-            transcript = asr.get_transcript(numpy_array)
-            if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
-                transcript = temp_transcript
-            elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
-                transcript = temp_transcript
-            else:
-                transcript = transcript
-                classification_result = get_classification(transcript[1])
+#             # Get transcript
+#             temp_transcript = [[], '']
+#             classification_result = ''
+#             transcript = asr.get_transcript(numpy_array)
+#             if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
+#                 transcript = temp_transcript
+#             elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
+#                 transcript = temp_transcript
+#             else:
+#                 transcript = transcript
+#                 classification_result = get_classification(transcript[1])
                 
             
-            print(classification_result)
-            # Send back a structured response
-            response_data = {
-                "status": "success",
-                "transcript": {'transcript':transcript[1],'intent':classification_result}
-            }
-            await manager.send_data(json.dumps(response_data), websocket)
+#             print(classification_result)
+#             # Send back a structured response
+#             response_data = {
+#                 "status": "success",
+#                 "transcript": {'transcript':transcript[1],'intent':classification_result}
+#             }
+#             await manager.send_data(json.dumps(response_data), websocket)
 
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        print("WebSocket disconnected")
-    except Exception as e:
-        print(f"Error occurred: {e}")
+#     except WebSocketDisconnect:
+#         manager.disconnect(websocket)
+#         print("WebSocket disconnected")
+#     except Exception as e:
+#         print(f"Error occurred: {e}")
 
 
-@app.websocket("/ws_classify_ner")
+@app.websocket("/ws_classify")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
