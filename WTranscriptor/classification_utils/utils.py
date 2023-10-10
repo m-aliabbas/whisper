@@ -10,9 +10,27 @@ from Dull import Dull
 from Extractor import Extractor
 import re
 
+def clean_word(word):
+    return re.sub(r'[^a-zA-Z0-9]', '', word)
+
+def join_broken_entities(data):
+    print(data)
+    i = 0
+    while i < len(data) - 1:
+        if data[i]['index'] + 1 == data[i+1]['index']:
+            data[i]['word'] += clean_word(data[i+1]['word'])
+            data[i]['word'] = clean_word(data[i]['word'])
+            data[i]['end'] = data[i+1]['end']
+            del data[i+1]
+        else:
+            i += 1
+    return data
+
+
 
 
 smart_classifier = Smart(base_path=CLASSIFIER_MODULE_PATH,model_path=f'files/{MODEL_NAME}/modal',
+                         tokenizer_path=f'files/{MODEL_NAME}/modal',
                          mapping_dict_path = f'files/{MODEL_NAME}/modal/map.csv')
 dull_classifier = Dull(base_path=CLASSIFIER_MODULE_PATH)
 extractor = Extractor(base_path=CLASSIFIER_MODULE_PATH,
@@ -112,29 +130,50 @@ def classify_ensemble(classification_result, verbose=False):
 
 def get_classification(transcript,verbose=False):
     # print('inside classification')
-    try:
-        result = smart_classifier.predict(transcript)
-        smart_result = dull_classifier.predict(transcript)
-
-        if verbose:
-            print('AI Detect',result['intent'])
-            print('STR Detect',smart_result)
-        result['smart_intent'] = smart_result
-        # print('Result from Smart Classifier :' , smart_result)
-        # final_intent = classify_ensemble(result,verbose=verbose)
-        result['final_intent'] = result['intent']['name']
-        return result['final_intent']
-    except Exception as e:
-        print(f'Error {e}')
+    # try:
+    print(transcript)
+    result = smart_classifier.predict(transcript)
+    smart_result = dull_classifier.predict(transcript)
+    print(result)
+    if verbose:
+        print('AI Detect',result['intent'])
+        print('STR Detect',smart_result)
+    result['smart_intent'] = smart_result
+    # print('Result from Smart Classifier :' , smart_result)
+    # final_intent = classify_ensemble(result,verbose=verbose)
+    result['final_intent'] = result['intent']['name']
+    return result['final_intent']
+    # except Exception as e:
+    #     print(f'Error {e}')
 
 
 def get_entity(transcript,verbose=False):
     # print('inside classification')
+    print(transcript)
+    years_ago = None
+    year = None
     try:
         result = extractor.predict(transcript,ENTITY_LIST)
-        filtered_list = [entry['word'] for entry in result if entry['entity'] in ENTITY_LIST]
-        text_result = ' '.join(filtered_list)
-        number = extract_and_convert_number(text_result)
+        if len(result)>0:
+            iltered_list = [entry for entry in result if entry['entity'] in ENTITY_LIST]
+            broken_join = join_broken_entities(iltered_list)
+            # Check the entities and store them into the respective variables
+            print(broken_join)
+            for item in broken_join:
+                if item['entity'] == PRORITY_LIST[0]:
+                    year = item['word']
+                elif item['entity'] == PRORITY_LIST[1]:
+                    years_ago = item['word']
+            if year:
+                return extract_and_convert_number(year)
+            elif years_ago:
+                number = int(re.search(r'\d+', years_ago).group())
+                print(number)
+                return number
+            else:
+                return extract_and_convert_number(transcript)
+        else:
+            number = extract_and_convert_number(transcript)
         if number:
             return number
         else:
@@ -142,3 +181,4 @@ def get_entity(transcript,verbose=False):
     except Exception as e:
         print(f'Error {e}')
         return None
+    

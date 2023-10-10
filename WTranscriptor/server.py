@@ -122,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
             
             # Convert received data to numpy array
             numpy_array = np.array(json.loads(data))
-            
+            entity = None
             # Get transcript
             temp_transcript = [[], '']
             classification_result = ''
@@ -148,8 +148,8 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         print("WebSocket disconnected")
-    except Exception as e:
-        print(f"Error occurred: {e}")
+    # except Exception as e:
+    #     print(f"Error occurred: {e}")
 
 
 @app.post("/asr_process")
@@ -239,6 +239,7 @@ async def classify_asr(request: Request):
         transcript = transcript
         classification_result = get_classification(transcript[1])
         entity = get_entity(transcript[1])
+        print('Entity',entity)
     t2 = timeit.timeit()
     print('Time taken', t2-t1)
     # Return a structured response

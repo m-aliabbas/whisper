@@ -1,4 +1,5 @@
 from SileroVadModule import SileroVadModule
+from WebRTCVadModule import WebRTCVadModule
 
 class VAD_Interface(object):
     def __init__(self,config) -> None:
@@ -7,7 +8,8 @@ class VAD_Interface(object):
         '''
         print(' VAD Config',config)
         self.config = config
-        self.vad = SileroVadModule(config=self.config)
+        # self.vad = SileroVadModule(config=self.config)
+        self.vad = WebRTCVadModule()
     def pause_status(self,data):
         '''
         return pause based on specified VAD Module
