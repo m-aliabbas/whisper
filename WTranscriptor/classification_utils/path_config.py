@@ -1,8 +1,8 @@
 CLASSIFIER_MODULE_PATH = '/home/mohammadali/Desktop/waspak.co/farooq/'
-NER_PATH = 'mva_ner'
-MODEL_NAME = 'model_mva1'
-ENTITY_LIST = ['B-YEARS_AGO','B-YEAR']
+NER_PATH = 'med_ner_2'
+MODEL_NAME = 'model_medicare1'
+ENTITY_LIST = ['B-AGE','B-YOB','I-AGE']
 
 
-PRORITY_LIST = ['B-YEARS_AGO','B-YEAR']
+PRORITY_LIST = ['B-AGE','B-YOB','I-AGE']
 

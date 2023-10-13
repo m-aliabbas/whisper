@@ -11,14 +11,14 @@ from Extractor import Extractor
 import re
 
 def clean_word(word):
-    return re.sub(r'[^a-zA-Z0-9]', '', word)
+    return re.sub(r'[^a-zA-Z0-9 ]', '', word)
+
 
 def join_broken_entities(data):
-    print(data)
     i = 0
     while i < len(data) - 1:
         if data[i]['index'] + 1 == data[i+1]['index']:
-            data[i]['word'] += clean_word(data[i+1]['word'])
+            data[i]['word'] += " " + clean_word(data[i+1]['word'])
             data[i]['word'] = clean_word(data[i]['word'])
             data[i]['end'] = data[i+1]['end']
             del data[i+1]
@@ -149,11 +149,14 @@ def get_classification(transcript,verbose=False):
 
 def get_entity(transcript,verbose=False):
     # print('inside classification')
-    print(transcript)
     years_ago = None
     year = None
+
+
     try:
-        result = extractor.predict(transcript,ENTITY_LIST)
+        result = extractor.predict(transcript,ENTITY_LIST,)
+        years_ago = None
+        year = None
         if len(result)>0:
             iltered_list = [entry for entry in result if entry['entity'] in ENTITY_LIST]
             broken_join = join_broken_entities(iltered_list)
@@ -161,15 +164,17 @@ def get_entity(transcript,verbose=False):
             print(broken_join)
             for item in broken_join:
                 if item['entity'] == PRORITY_LIST[0]:
-                    year = item['word']
-                elif item['entity'] == PRORITY_LIST[1]:
                     years_ago = item['word']
+                elif item['entity'] == PRORITY_LIST[1]:
+                    year = item['word']
             if year:
                 return extract_and_convert_number(year)
             elif years_ago:
-                number = int(re.search(r'\d+', years_ago).group())
-                print(number)
-                return number
+                try:
+                    number = int(re.search(r'\d+', years_ago).group())
+                    return number
+                except:
+                    return extract_and_convert_number(years_ago)
             else:
                 return extract_and_convert_number(transcript)
         else:
@@ -181,4 +186,3 @@ def get_entity(transcript,verbose=False):
     except Exception as e:
         print(f'Error {e}')
         return None
-    
