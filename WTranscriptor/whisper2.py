@@ -14,6 +14,16 @@ Faster Implementation of Whisper
 '''
 
 
+vad_model, utils = torch.hub.load('snakers4/silero-vad',
+                              model='silero_vad',
+                              force_reload=False)
+
+
+(get_speech_timestamps,
+ save_audio,
+ read_audio,
+ VADIterator,
+ collect_chunks) = utils
 
 class WhisperTranscriptorAPI:
     '''
@@ -135,11 +145,14 @@ class WhisperTranscriptorAPI:
         '''
         Generate transcript usign a numpy array given as inpuy 
         '''
+        speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000)
+        wave1 = collect_chunks(speech_timestamps, wave)
+        wave = wave1
         beam_size=None
         best_of=3
         wave = wave / np.iinfo(np.int16).max #normalize
         t1 = timeit.default_timer()
-        segments, info = self.model.transcribe(wave, beam_size=5, best_of=3,without_timestamps=True,language='en',)
+        segments, info = self.model.transcribe(wave, beam_size=5, best_of=3,without_timestamps=True,language='en')
         transcription = ""
         for segment in segments:
             transcription += segment.text
