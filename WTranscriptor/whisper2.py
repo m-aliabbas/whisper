@@ -145,9 +145,13 @@ class WhisperTranscriptorAPI:
         '''
         Generate transcript usign a numpy array given as inpuy 
         '''
-        speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000)
-        wave1 = collect_chunks(speech_timestamps, wave)
-        wave = wave1
+        speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.6)
+        print(speech_timestamps)
+        if speech_timestamps:
+            wave = torch.from_numpy(wave)
+            wave1 = collect_chunks(speech_timestamps, wave)
+            wave = wave1.numpy()
+        
         beam_size=None
         best_of=3
         wave = wave / np.iinfo(np.int16).max #normalize
