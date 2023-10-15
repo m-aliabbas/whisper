@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 WTranscriptor/exame1.wav
+*.jit
