@@ -2,7 +2,7 @@ import torch
 import numpy as np
 # from whisper1 import WhisperTranscriptorAPI 
 from whisper2 import WhisperTranscriptorAPI 
-
+# from silero1 import SileroTranscriptorAPI
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -34,6 +34,7 @@ class ASR(object):
         self.model_path= config.get("model_path","tiny.en") 
         print("[INFO] Loading Models")
         self.model = WhisperTranscriptorAPI(model_path=self.model_path,)
+        # self.model = SileroTranscriptorAPI()
         print("[INFO] Model Loaded")
     
     def get_transcript(self, data_torch, is_greedy=False, emissions_only=False):
