@@ -136,7 +136,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 classification_result = get_classification(transcript[1])
                 entity = get_entity(transcript[1])
             
-            print(classification_result)
+            # print(classification_result)
             # Send back a structured response
             response_data = {
                 "status": "success",
@@ -249,3 +249,5 @@ async def classify_asr(request: Request):
                        'entity':entity}
     }
     return JSONResponse(content=response_data)
+
+
