@@ -131,10 +131,10 @@ def classify_ensemble(classification_result, verbose=False):
 def get_classification(transcript,verbose=False):
     # print('inside classification')
     # try:
-    print(transcript)
+    # print(transcript)
     result = smart_classifier.predict(transcript)
     smart_result = dull_classifier.predict(transcript)
-    print(result)
+    # print(result)
     if verbose:
         print('AI Detect',result['intent'])
         print('STR Detect',smart_result)
@@ -161,7 +161,7 @@ def get_entity(transcript,verbose=False):
             iltered_list = [entry for entry in result if entry['entity'] in ENTITY_LIST]
             broken_join = join_broken_entities(iltered_list)
             # Check the entities and store them into the respective variables
-            print(broken_join)
+            # print(broken_join)
             for item in broken_join:
                 if item['entity'] == PRORITY_LIST[0]:
                     years_ago = item['word']
