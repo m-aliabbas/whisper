@@ -7,6 +7,7 @@ from scipy.io.wavfile import write
 import warnings
 import torch
 import os
+import zlib
 warnings.filterwarnings('ignore')
 
 '''
@@ -146,6 +147,7 @@ class WhisperTranscriptorAPI:
         Generate transcript usign a numpy array given as inpuy 
         '''
         print('Some thing Recieve Working on it')
+
         t1 = timeit.default_timer()
         speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.3)
         print(speech_timestamps)
