@@ -21,7 +21,7 @@ config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "base.en"
+    "model_path": "tiny.en"
 }
 asr = ASR(config)
 
@@ -49,68 +49,6 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            
-            # Convert received data to numpy array
-            numpy_array = np.array(json.loads(data))
-            
-            # Get transcript
-            transcript = asr.get_transcript(numpy_array)
-            
-            # Send back a structured response
-            response_data = {
-                "status": "success",
-                "transcript": transcript[1]
-            }
-            await manager.send_data(json.dumps(response_data), websocket)
-
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        print("WebSocket disconnected")
-    except Exception as e:
-        print(f"Error occurred: {e}")
-
-# @app.websocket("/ws_classify")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await manager.connect(websocket)
-#     try:
-#         while True:
-#             data = await websocket.receive_text()
-            
-#             # Convert received data to numpy array
-#             numpy_array = np.array(json.loads(data))
-            
-#             # Get transcript
-#             temp_transcript = [[], '']
-#             classification_result = ''
-#             transcript = asr.get_transcript(numpy_array)
-#             if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
-#                 transcript = temp_transcript
-#             elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
-#                 transcript = temp_transcript
-#             else:
-#                 transcript = transcript
-#                 classification_result = get_classification(transcript[1])
-                
-            
-#             print(classification_result)
-#             # Send back a structured response
-#             response_data = {
-#                 "status": "success",
-#                 "transcript": {'transcript':transcript[1],'intent':classification_result}
-#             }
-#             await manager.send_data(json.dumps(response_data), websocket)
-
-#     except WebSocketDisconnect:
-#         manager.disconnect(websocket)
-#         print("WebSocket disconnected")
-#     except Exception as e:
-#         print(f"Error occurred: {e}")
 
 
 @app.websocket("/asr_classify")
@@ -148,8 +86,77 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         print("WebSocket disconnected")
-    # except Exception as e:
-    #     print(f"Error occurred: {e}")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+@app.websocket("/asr_classify_chunks")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    audio_buffer = bytearray()  # Use bytearray to accumulate binary data
+
+    try:
+        while True:
+            print(len(audio_buffer))
+            data = await websocket.receive()
+            
+            # Check for the type of message received
+            if 'text' in data:
+                text_data = data['text']
+                print(text_data)
+                # If the completion signal is received, convert buffer to numpy array
+                if text_data == "END":
+                    print(len(audio_buffer))
+                    numpy_array = np.frombuffer(audio_buffer, dtype=np.int16)  # Assuming float32 dtype for audio
+                    print(numpy_array)
+                    # Clear the audio buffer for the next stream
+                    audio_buffer = bytearray()
+
+                    entity = None
+                    # Get transcript
+                    temp_transcript = [[], '']
+                    classification_result = ''
+                    transcript = asr.get_transcript(numpy_array)
+
+                    if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
+                        transcript = temp_transcript
+                    elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
+                        transcript = temp_transcript
+                    else:
+                        transcript = transcript
+                        classification_result = get_classification(transcript[1])
+                        entity = get_entity(transcript[1])
+
+                    # Send back a structured response
+                    response_data = {
+                        "status": "success",
+                        "transcript": {
+                            'transcript': transcript[1],
+                            'intent': classification_result,
+                            'entity': entity
+                        }
+                    }
+                    await manager.send_data(json.dumps(response_data), websocket)
+
+                else:
+                    # Handle other text data if needed
+                    pass
+
+            elif 'bytes' in data:
+                # Append binary data to audio buffer
+                audio_buffer.extend(data['bytes'])
+                # print(audio_buffer)
+
+            else:
+                break
+            
+
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        print("WebSocket disconnected")
+        
+    except Exception as e:
+        print(f"Error occurred: {e}")
 
 
 @app.post("/asr_process")
@@ -206,10 +213,12 @@ async def classify_asr(request: Request):
     t2 = timeit.timeit()
     print('Time taken', t2-t1)
     # Return a structured response
+
     response_data = {
         "status": "success",
         "transcript": {'transcript':transcript[1], 'intent':classification_result}
     }
+    print(respose_data)
     return JSONResponse(content=response_data)
 
 
