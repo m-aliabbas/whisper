@@ -14,7 +14,7 @@ def run_server(instance_number, conda_env,port):
         activate_conda_environment(conda_env)
 
         # Run uvicorn with a unique port for each instance
-        uvicorn_command = f'uvicorn server:app --reload --port {port}'
+        uvicorn_command = f'uvicorn server:app --port {port}'
         subprocess.run(uvicorn_command, shell=True, check=True, executable='/bin/bash')
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")

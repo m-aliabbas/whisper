@@ -137,9 +137,13 @@ async def websocket_endpoint(websocket: WebSocket):
                     }
                     await manager.send_data(json.dumps(response_data), websocket)
 
-                else:
+                elif text_data == "P":
                     # Handle other text data if needed
-                    pass
+                    response_data = {
+                        "status": "P",
+                    }
+                    await manager.send_data(json.dumps(response_data), websocket)
+                    
 
             elif 'bytes' in data:
                 # Append binary data to audio buffer
