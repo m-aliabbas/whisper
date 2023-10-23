@@ -98,16 +98,16 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             # print(len(audio_buffer))
             data = await websocket.receive()
-            
+            # print(data)
             # Check for the type of message received
             if 'text' in data:
                 text_data = data['text']
-                print(text_data)
+                # print(text_data)
                 # If the completion signal is received, convert buffer to numpy array
-                if text_data == "END":
-                    print(len(audio_buffer))
+                if text_data == "E":
+                    # print(len(audio_buffer))
                     numpy_array = np.frombuffer(audio_buffer, dtype=np.int16)  # Assuming float32 dtype for audio
-                    print(numpy_array)
+                    # print(numpy_array)
                     # Clear the audio buffer for the next stream
                     audio_buffer = bytearray()
 
@@ -143,6 +143,9 @@ async def websocket_endpoint(websocket: WebSocket):
                         "status": "P",
                     }
                     await manager.send_data(json.dumps(response_data), websocket)
+                
+                else:
+                    break
                     
 
             elif 'bytes' in data:
@@ -222,7 +225,7 @@ async def classify_asr(request: Request):
         "status": "success",
         "transcript": {'transcript':transcript[1], 'intent':classification_result}
     }
-    print(respose_data)
+    print(response_data)
     return JSONResponse(content=response_data)
 
 
