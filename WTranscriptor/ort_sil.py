@@ -10,9 +10,17 @@ import onnxruntime
 warnings.filterwarnings('ignore')
 
 
-class SileroTranscriptorAPI:
+_, decoder, utils = torch.hub.load(repo_or_dir='snakers4/silero-models', model='silero_stt', language='en')
+(read_batch, split_into_batches,
+ read_audio, prepare_model_input) = utils
+
+torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml', 'models_list.yml')
+models = OmegaConf.load('models.yml')
+torch.hub.download_url_to_file(models.stt_models.en.latest.onnx, 'model.onnx', progress=True)
+
+class ORTSileroTranscriptorAPI:
     '''
-    Silero Transcriptopr
+    ORT Transcriptopr
     '''
     def __init__(self,model_path='',load_onnx=True):
 

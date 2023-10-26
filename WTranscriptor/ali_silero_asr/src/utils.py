@@ -5,6 +5,8 @@ import torchaudio
 import numpy as np
 from typing import List
 from itertools import groupby
+import onnx
+import onnxruntime
 
 def process_audio(audio_array: np.ndarray,
                   original_sr: int,
@@ -131,6 +133,7 @@ class Decoder():
         return self.process(probs, wav_len, word_align)
 
 
+
 def init_jit_model(model_url: str,
                    device: torch.device = torch.device('cpu')):
     torch.set_grad_enabled(False)
@@ -147,3 +150,11 @@ def init_jit_model(model_url: str,
     model = torch.jit.load(model_path, map_location=device)
     model.eval()
     return model, Decoder(model.labels)
+
+
+def init_onnx_model(model_url, device = 'cpu'):
+    torch.hub.download_url_to_file(model_url, 'model.onnx', progress=True)
+    onnx_model = onnx.load('model.onnx')
+    onnx.checker.check_model(onnx_model)
+    ort_session = onnxruntime.InferenceSession('model.onnx')
+    return ort_session, Decoder()

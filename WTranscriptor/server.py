@@ -12,16 +12,43 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPExcept
 from fastapi.responses import HTMLResponse, JSONResponse
 import numpy as np
 from WhisperASR import ASR
+import gzip
 from classification_utils.utils import *
 # Initialize FastAPI app
 app = FastAPI()
 
+
+def compress_data(data):
+    return gzip.compress(data)
+suppress_low = [
+    "Thank you",
+    "Thanks for",
+    "ike and ",
+    "lease sub",
+    "The end.",
+    "ubscribe",
+    "my channel",
+    "the channel",
+    "our channel",
+    "ollow me on",
+    "for watching",
+    "hank you for watching",
+    "for your viewing",
+    "r viewing",
+    "Amara",
+    "next video",
+    "full video",
+    "ranslation by",
+    "ranslated by",
+    "ee you next week",
+]
 # Configuration for ASR
 config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "base.en"
+    "model_path": "tiny.en",
+
 }
 asr = ASR(config)
 
@@ -51,43 +78,43 @@ manager = ConnectionManager()
 
 
 
-@app.websocket("/asr_classify")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
+# @app.websocket("/asr_classify")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await manager.connect(websocket)
+#     try:
+#         while True:
+#             data = await websocket.receive_text()
             
-            # Convert received data to numpy array
-            numpy_array = np.array(json.loads(data))
-            entity = None
-            # Get transcript
-            temp_transcript = [[], '']
-            classification_result = ''
-            transcript = asr.get_transcript(numpy_array)
-            if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
-                transcript = temp_transcript
-            elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
-                transcript = temp_transcript
-            else:
-                transcript = transcript
-                classification_result = get_classification(transcript[1])
-                entity = get_entity(transcript[1])
+#             # Convert received data to numpy array
+#             numpy_array = np.array(json.loads(data))
+#             entity = None
+#             # Get transcript
+#             temp_transcript = [[], '']
+#             classification_result = ''
+#             transcript = asr.get_transcript(numpy_array)
+#             if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
+#                 transcript = temp_transcript
+#             elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
+#                 transcript = temp_transcript
+#             else:
+#                 transcript = transcript
+#                 classification_result = get_classification(transcript[1])
+#                 entity = get_entity(transcript[1])
             
-            # print(classification_result)
-            # Send back a structured response
-            response_data = {
-                "status": "success",
-                "transcript": {'transcript':transcript[1],'intent':classification_result,
-                               'entity':entity}
-            }
-            await manager.send_data(json.dumps(response_data), websocket)
+#             # print(classification_result)
+#             # Send back a structured response
+#             response_data = {
+#                 "status": "success",
+#                 "transcript": {'transcript':transcript[1],'intent':classification_result,
+#                                'entity':entity}
+#             }
+#             await manager.send_data(json.dumps(response_data), websocket)
 
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-        print("WebSocket disconnected")
-    except Exception as e:
-        print(f"Error occurred: {e}")
+#     except WebSocketDisconnect:
+#         manager.disconnect(websocket)
+#         print("WebSocket disconnected")
+#     except Exception as e:
+#         print(f"Error occurred: {e}")
 
 @app.websocket("/asr_classify_chunks")
 async def websocket_endpoint(websocket: WebSocket):
@@ -110,14 +137,19 @@ async def websocket_endpoint(websocket: WebSocket):
                     # print(numpy_array)
                     # Clear the audio buffer for the next stream
                     audio_buffer = bytearray()
-
+                    hal_flag = False
                     entity = None
                     # Get transcript
                     temp_transcript = [[], '']
                     classification_result = ''
                     transcript = asr.get_transcript(numpy_array)
-
-                    if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
+                    for hal in suppress_low:
+                        if hal in transcript[1]:
+                            hal_flag = True
+                    if hal_flag:
+                        transcript = temp_transcript
+                        hal_flag = False
+                    elif len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
                         transcript = temp_transcript
                     elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
                         transcript = temp_transcript
@@ -135,14 +167,16 @@ async def websocket_endpoint(websocket: WebSocket):
                             'entity': entity
                         }
                     }
-                    await manager.send_data(json.dumps(response_data), websocket)
+                    compressed_data = compress_data(json.dumps(response_data).encode('utf-8'))
+                    await manager.send_data(compressed_data, websocket)
 
                 elif text_data == "P":
                     # Handle other text data if needed
                     response_data = {
                         "status": "P",
                     }
-                    await manager.send_data(json.dumps(response_data), websocket)
+                    compressed_data = compress_data(json.dumps(response_data).encode('utf-8'))
+                    await manager.send_data(compressed_data, websocket)
                 
                 else:
                     break
@@ -165,105 +199,5 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error occurred: {e}")
 
-
-@app.post("/asr_process")
-async def process_asr(request: Request):
-    try:
-        # Receive JSON data
-        data = await request.json()
-        # print(data)
-        # Check if 'audio_data' key is in the received data
-        if "audio_data" not in data:
-            raise HTTPException(status_code=400, detail="audio_data key not found in request body")
-        # numpy_array = np.array(json.loads(data["audio_data"]))
-        # print(numpy_array)
-        # Convert received data to numpy array
-        numpy_array = np.array(data["audio_data"])
-
-        # Get transcript
-        transcript = asr.get_transcript(numpy_array)
-        
-        # Return a structured response
-        response_data = {
-            "status": "success",
-            "transcript": transcript[1]
-        }
-        return JSONResponse(content=response_data)
-    except Exception as e:
-        return HTTPException(status_code=500, detail=f"Error occurred: {e}")
-    
-@app.post("/asr_classify")
-async def classify_asr(request: Request):
-    t1 = timeit.timeit()
-    # Receive JSON data
-    data = await request.json()
-    # print(data)
-    # Check if 'audio_data' key is in the received data
-    if "audio_data" not in data:
-        raise HTTPException(status_code=400, detail="audio_data key not found in request body")
-
-    # Convert received data to numpy array
-    numpy_array = np.array(json.loads(data["audio_data"]))
-
-    # Get transcript
-    temp_transcript = [[], '']
-    classification_result = ''
-    transcript = asr.get_transcript(numpy_array)
-    # print(transcript)
-    if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
-        transcript = temp_transcript
-    elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
-        transcript = temp_transcript
-    else:
-        transcript = transcript
-        classification_result = get_classification(transcript[1])
-    t2 = timeit.timeit()
-    print('Time taken', t2-t1)
-    # Return a structured response
-
-    response_data = {
-        "status": "success",
-        "transcript": {'transcript':transcript[1], 'intent':classification_result}
-    }
-    print(response_data)
-    return JSONResponse(content=response_data)
-
-
-@app.post("/asr_classify_ner")
-async def classify_asr(request: Request):
-    t1 = timeit.timeit()
-    # Receive JSON data
-    data = await request.json()
-    # print(data)
-    # Check if 'audio_data' key is in the received data
-    if "audio_data" not in data:
-        raise HTTPException(status_code=400, detail="audio_data key not found in request body")
-
-    # Convert received data to numpy array
-    numpy_array = np.array(json.loads(data["audio_data"]))
-
-    # Get transcript
-    temp_transcript = [[], '']
-    classification_result = ''
-    transcript = asr.get_transcript(numpy_array)
-    # print(transcript)
-    if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
-        transcript = temp_transcript
-    elif len(transcript[1]) < 12 and ('thank you' in transcript[1].lower()):
-        transcript = temp_transcript
-    else:
-        transcript = transcript
-        classification_result = get_classification(transcript[1])
-        entity = get_entity(transcript[1])
-        print('Entity',entity)
-    t2 = timeit.timeit()
-    print('Time taken', t2-t1)
-    # Return a structured response
-    response_data = {
-        "status": "success",
-        "transcript": {'transcript':transcript[1], 'intent':classification_result,
-                       'entity':entity}
-    }
-    return JSONResponse(content=response_data)
 
 
