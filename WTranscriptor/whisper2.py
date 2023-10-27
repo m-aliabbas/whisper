@@ -149,7 +149,7 @@ class WhisperTranscriptorAPI:
         print('Some thing Recieve Working on it')
 
         t1 = timeit.default_timer()
-        speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.3)
+        speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.1)
         print(speech_timestamps)
         if speech_timestamps:
             wave = torch.from_numpy(wave)
