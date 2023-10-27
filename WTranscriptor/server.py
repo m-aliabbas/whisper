@@ -41,6 +41,8 @@ suppress_low = [
     "ranslation by",
     "ranslated by",
     "ee you next week",
+    "video",
+    
 ]
 # Configuration for ASR
 config = {
