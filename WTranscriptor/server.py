@@ -49,7 +49,9 @@ config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "base.en",
+    "model_path": "openai/whisper-base.en",
+    'mac_device': True,
+
 
 }
 asr = ASR(config)
@@ -120,7 +122,7 @@ async def websocket_endpoint_transcription(websocket: WebSocket):
                         transcript = transcript
                         # classification_result = get_classification(transcript[1])
                         # entity = get_entity(transcript[1])
-
+                    
                     # Send back a structured response
                     response_data = {
                         "status": "success",

@@ -24,6 +24,7 @@ config["decoder_type"] =   "beam"   #currently supports beam and greedy
 
 #--------------- Whisper ASR model configs ----------------#
 config["model_path"] =   "openai/whisper-tiny.en"
+config['mac_device'] = True
 
 # -------------- Decoder configs ------------#
 if config["decoder_type"] == "beam":

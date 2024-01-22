@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 # from whisper1 import WhisperTranscriptorAPI 
-from whisper2 import WhisperTranscriptorAPI 
+from whisperlatest import WhisperTranscriptorAPI 
 # from silero1 import SileroTranscriptorAPI
 import warnings
 warnings.filterwarnings('ignore')
@@ -32,8 +32,9 @@ class ASR(object):
         self.check_interval = config.get("check_interval",3)
         #path of whisper-tiny.en; can be whisper-base.en openai/whisper-base.en
         self.model_path= config.get("model_path","tiny.en") 
+        self.mac_device = config.get('mac_device',False)
         print("[INFO] Loading Models")
-        self.model = WhisperTranscriptorAPI(model_path=self.model_path,)
+        self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=self.mac_device)
         # self.model = SileroTranscriptorAPI()
         print("[INFO] Model Loaded")
     
