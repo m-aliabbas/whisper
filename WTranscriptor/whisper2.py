@@ -2,8 +2,8 @@ from faster_whisper import WhisperModel
 # audio_path='/home/ali/Desktop/idrak_work/transcriptor_module-transcriptor-module/WTranscriptor/audios/preamble_5sec_resample_with_pause.wav'
 import timeit
 import numpy as np
-from pydub import AudioSegment
-from scipy.io.wavfile import write
+# from pydub import AudioSegment
+# from scipy.io.wavfile import write
 import warnings
 import torch
 import os
