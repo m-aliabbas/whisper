@@ -8,6 +8,11 @@ is used.
 4) Transcript are generated on 3s pause or 10s completion.
 
 
+# To run server
+
+Goto WTTranscriptor
+Run the command ```uvicorn server:app --host IP_ADDRESS --port PORT_NUMBER --reload ```
+
 Usage:
 
     1 ) 
