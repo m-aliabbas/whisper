@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-# from whisper1 import WhisperTranscriptorAPI 
+# from whisper2 import WhisperTranscriptorAPI 
 from whisperlatest import WhisperTranscriptorAPI 
 # from silero1 import SileroTranscriptorAPI
 import warnings
@@ -34,7 +34,7 @@ class ASR(object):
         self.model_path= config.get("model_path","tiny.en") 
         self.mac_device = config.get('mac_device',False)
         print("[INFO] Loading Models")
-        self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=self.mac_device)
+        self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=False)
         # self.model = SileroTranscriptorAPI()
         print("[INFO] Model Loaded")
     

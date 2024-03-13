@@ -3,7 +3,7 @@ import multiprocessing
 
 def activate_conda_environment(conda_env):
     try:
-        activate_command = f'source activate {conda_env}'
+        activate_command = f'conda activate {conda_env}'
         subprocess.run(activate_command, shell=True, check=True, executable='/bin/bash')
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
