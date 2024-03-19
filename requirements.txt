@@ -7,7 +7,7 @@ anyio==3.7.1
 async-timeout==4.0.3
 attrs==23.1.0
 audiosegment==0.23.0
-av==10.0.0
+av>=10.0.0,<12.0.0
 backoff==2.2.1
 blinker==1.6.2
 cachetools==5.3.1
@@ -16,8 +16,8 @@ cffi==1.16.0
 charset-normalizer==3.2.0
 click==8.1.6
 coloredlogs==15.0.1
-contourpy==1.2.0
-ctranslate2==3.24.0
+contourpy
+ctranslate2>=4.0.0,<5.0
 cycler==0.12.1
 datasets==2.10.1
 decorator==5.1.1
