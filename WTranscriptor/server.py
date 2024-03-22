@@ -8,10 +8,18 @@ sys.path.append(CLASSIFIER_MODULE_PATH)
 # External Libraries
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException,File
 from fastapi.responses import HTMLResponse, JSONResponse
 import numpy as np
 from WhisperASR import ASR
+from pydantic import BaseModel
+
+
+from utils.utils import *
+class AudioInput(BaseModel):
+    audio_bytes_str: str
+
+
 import gzip
 from classification_utils.utils import *
 # Initialize FastAPI app
@@ -78,7 +86,11 @@ class ConnectionManager:
         await websocket.send_text(data)
 
 
+
+
+    
 manager = ConnectionManager()
+
 
 
 @app.websocket("/transcribe")
@@ -280,3 +292,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 
+@app.post("/transcribe_array")
+async def audio_to_numpy(file: bytes = File(...)):
+    try:
+        audio_np = np.frombuffer(file, dtype=np.int16)
+        transcript = asr.get_transcript(audio_np)
+        return {"message": "Conversion successful", "transcript":transcript[1]}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
