@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 import numpy as np
 from WhisperASR import ASR
 from pydantic import BaseModel
-
+import librosa
 import numpy as np
 from scipy.signal import resample
 
@@ -60,7 +60,7 @@ config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "distil-whisper/distil-small.en",
+    "model_path": "openai/whisper-small.en",
     'mac_device': True,
 }
 asr = ASR(config)
@@ -291,23 +291,25 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error occurred: {e}")
 
-
+def filter_hal(txt):
+    hal = ['you','your','video','thank']
+    if len(txt) < 6:
+        for hal_st in hal:
+            if hal_st in txt:
+                return ''
+    return txt 
 
 @app.post("/transcribe_array")
 async def audio_to_numpy(file: bytes = File(...)):
     try:
         audio_np = np.frombuffer(file, dtype=np.int16)
-        num_samples = len(audio_np)
-        duration = num_samples / 8000
-        new_num_samples = int(duration * 16000)
-
-        # Upsample the audio. This returns a float64 array.
-        audio_upsampled = resample(audio_np, new_num_samples)
-
+        audio_np_float32 = audio_np.astype(np.float32) / 32768
+        audio_upsampled_float32 = librosa.resample(audio_np_float32, orig_sr=8000, target_sr=16000)
         # Convert the upsampled audio back to int16
-        audio_upsampled_int16 = np.asarray(audio_upsampled, dtype=np.int16)
+        audio_upsampled_int16 = np.asarray(audio_upsampled_float32 * 32768, dtype=np.int16)
+        transcript = asr.get_transcript(audio_np)
+        txt = filter_hal(transcript[1])
 
-        transcript = asr.get_transcript(audio_upsampled_int16)
-        return {"message": "Conversion successful", "transcript":transcript[1]}
+        return {"message": "Conversion successful", "transcript":txt}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
