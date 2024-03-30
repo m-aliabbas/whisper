@@ -15,6 +15,9 @@ from WhisperASR import ASR
 from pydantic import BaseModel
 import numpy as np
 from utils.utils import *
+import random
+import string
+import librosa
 
 
 class AudioInput(BaseModel):
@@ -307,29 +310,25 @@ async def audio_to_numpy(file: bytes = File(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 from websockets.exceptions import ConnectionClosedOK
-@app.websocket("/ws_file_transcribe")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    file_content = b""
-    try:
-        while True:
-            try:
-                data = await websocket.receive_bytes()
-                file_content += data
-            except ConnectionClosedOK:
-                print("Connection closed by the client")
-                break
-    except Exception as e:
-        print(f"Error during reception: {e}")
 
-    print('Received')
+
+@app.websocket("/ws_file_transcribe1")
+async def websocket_endpoint(websocket: WebSocket):
     try:
-        audio_np = np.frombuffer(file_content, dtype=np.int16)
-        print('Putting file to ASR')
+        await websocket.accept()
+        data = await websocket.receive_bytes()  # Receive file data as bytes
+        file_name_short = ''.join(random.choices(string.ascii_letters + string.digits, k=6)) + ".wav"
+        file_name_full = f'temp/{file_name_short}'
+        with open(file_name_full, "wb") as file:
+            file.write(data)  # Save the received data to a file
+        audio_np,sr = read_wav_as_int16(file_name_full)
         transcript = asr.get_transcript(audio_np)
         filtered_transcript = filter_hal(transcript[1])
-        print('Transcription made')
         await websocket.send_text(f"{filtered_transcript}")
+        await websocket.close()
+        try:
+            result = delete_file_if_exists(file_name_full)
+        except:
+            pass
     except Exception as e:
-        print(f"[-] Error {e}")
-        await websocket.send_text(f"") 
+        print(e)
