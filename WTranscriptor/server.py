@@ -13,12 +13,10 @@ from fastapi.responses import HTMLResponse, JSONResponse
 import numpy as np
 from WhisperASR import ASR
 from pydantic import BaseModel
-
 import numpy as np
-from scipy.signal import resample
-
-
 from utils.utils import *
+
+
 class AudioInput(BaseModel):
     audio_bytes_str: str
 
@@ -60,7 +58,7 @@ config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "distil-whisper/distil-small.en",
+    "model_path": "openai/whisper-small.en",
     'mac_device': True,
 }
 asr = ASR(config)
@@ -291,23 +289,47 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error occurred: {e}")
 
-
+def filter_hal(txt):
+    hal = ['you','your','video','thank']
+    if len(txt) < 6:
+        for hal_st in hal:
+            if hal_st in txt:
+                return ''
+    return txt 
 
 @app.post("/transcribe_array")
 async def audio_to_numpy(file: bytes = File(...)):
     try:
         audio_np = np.frombuffer(file, dtype=np.int16)
-        num_samples = len(audio_np)
-        duration = num_samples / 8000
-        new_num_samples = int(duration * 16000)
-
-        # Upsample the audio. This returns a float64 array.
-        audio_upsampled = resample(audio_np, new_num_samples)
-
-        # Convert the upsampled audio back to int16
-        audio_upsampled_int16 = np.asarray(audio_upsampled, dtype=np.int16)
-
-        transcript = asr.get_transcript(audio_upsampled_int16)
-        return {"message": "Conversion successful", "transcript":transcript[1]}
+        transcript = asr.get_transcript(audio_np)
+        txt = filter_hal(transcript[1])
+        return {"message": "Conversion successful", "transcript":txt}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+from websockets.exceptions import ConnectionClosedOK
+@app.websocket("/ws_file_transcribe")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    file_content = b""
+    try:
+        while True:
+            try:
+                data = await websocket.receive_bytes()
+                file_content += data
+            except ConnectionClosedOK:
+                print("Connection closed by the client")
+                break
+    except Exception as e:
+        print(f"Error during reception: {e}")
+
+    print('Received')
+    try:
+        audio_np = np.frombuffer(file_content, dtype=np.int16)
+        print('Putting file to ASR')
+        transcript = asr.get_transcript(audio_np)
+        filtered_transcript = filter_hal(transcript[1])
+        print('Transcription made')
+        await websocket.send_text(f"{filtered_transcript}")
+    except Exception as e:
+        print(f"[-] Error {e}")
+        await websocket.send_text(f"") 
