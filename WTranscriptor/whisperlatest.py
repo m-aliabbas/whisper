@@ -35,7 +35,7 @@ class WhisperTranscriptorAPI:
     #----------------------- constructor -------------------------------------
     #
     def __init__(self,model_path='',file_processing=False,word_timestamp=True,mac_device=False,
-                 dtype = torch.float16,en_flash_attention = True,batch_size=32):
+                 dtype = torch.float16,en_flash_attention = False,batch_size=32):
 
         '''
         1) Defining processor for processing audio input for Whisper and
@@ -107,12 +107,13 @@ class WhisperTranscriptorAPI:
             generate_kwargs.pop("language") 
         
         t1 = timeit.default_timer()
-        speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.1)
+        #speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.1)
+        speech_timestamps = True
         print(speech_timestamps)
         if speech_timestamps:
-            wave = torch.from_numpy(wave)
-            wave1 = collect_chunks(speech_timestamps, wave)
-            wave = wave1.numpy()
+            #wave = torch.from_numpy(wave)
+            # wave1 = collect_chunks(speech_timestamps, wave)
+            # wave = wave1.numpy()
             wave = wave / np.iinfo(np.int16).max #normalize
             t1 = timeit.default_timer()
             outputs = self.model(
