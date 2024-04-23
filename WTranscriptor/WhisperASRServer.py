@@ -34,25 +34,11 @@ asr_pool_index = 0
 
 def process_chunk(message,asr):
     if isinstance(message,bytes):
-        # file_name_short = ''.join(random.choices(string.ascii_letters + string.digits, k=6)) + ".wav"
-        # file_name_full = f'temp/{file_name_short}'
-        # channels = 1  # Mono audio
-        # sample_width = 2  # Assuming 16-bit audio
-        # framerate = 16000  # Sampling rate
-        # file_path = file_name_full
-
-        # # Use the wave module to write the received audio data with the proper headers
-        # with wave.open(file_path, "wb") as wf:
-        #     wf.setnchannels(channels)
-        #     wf.setsampwidth(sample_width)
-        #     wf.setframerate(framerate)
-        #     wf.writeframes(message)
-
-        # audio_np,sr = read_wav_as_int16(file_name_full)
-        # print(audio_np.shape)
+        # print(message)
         audio_np = np.frombuffer(message, dtype=np.int16)
         transcript = asr.get_transcript(audio_np)
         # result = delete_file_if_exists(file_name_full)
+        print(transcript)
         return transcript[1], True
     else:
         print('Some other instanc')
@@ -111,10 +97,10 @@ async def start():
     #     GpuInstantiate()
     # pool = concurrent.futures.ThreadPoolExecutor(initializer=thread_init)
 
-    pool_size = 4  # Example: Set based on your GPU capabilities
+    pool_size = 12  # Example: Set based on your GPU capabilities
     asr_pool = initialize_asr_pool(pool_size, config)
     
-    pool = concurrent.futures.ThreadPoolExecutor((os.cpu_count() or 10))
+    pool = concurrent.futures.ThreadPoolExecutor((os.cpu_count() or 1))
     print(f' Total pool for parallel running {pool}')
     async with websockets.serve(recoginize, args.interface, args.port,max_size=2**20):
         await asyncio.Future()

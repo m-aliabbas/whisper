@@ -2,6 +2,7 @@ import torch
 import numpy as np
 # from whisper2 import WhisperTranscriptorAPI 
 from whisperlatest import WhisperTranscriptorAPI 
+from Singlton import SingletonMeta
 # from silero1 import SileroTranscriptorAPI
 import warnings
 warnings.filterwarnings('ignore')
@@ -37,14 +38,16 @@ class ASR(object):
         self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=False)
         # self.model = SileroTranscriptorAPI()
         print("[INFO] Model Loaded")
-    
-    def get_transcript(self, data_torch, is_greedy=False, emissions_only=False):
+    @staticmethod
+    def get_instance(config):
+        return ASR(config)
+    async def get_transcript(self, data_torch, is_greedy=False, emissions_only=False):
         '''
          This function will generate transcripts using whisper.
          
         '''
         wave=data_torch # get the wave data
-        transcript,ids = self.model.generate_transcript_numpy(wave=wave)
+        transcript,ids = await self.model.generate_transcript_numpy(wave=wave)
         #ids are model generated tokens id for the ASR
         return ids,transcript
     

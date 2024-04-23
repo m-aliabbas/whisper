@@ -61,10 +61,10 @@ config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "openai/whisper-base.en",
+    "model_path": "distil-whisper/distil-medium.en",
     'mac_device': True,
 }
-asr = ASR(config)
+asr = ASR.get_instance(config)
 
 
 
@@ -121,7 +121,7 @@ async def websocket_endpoint_transcription(websocket: WebSocket):
                     # Get transcript
                     temp_transcript = [[], '']
                     classification_result = ''
-                    transcript = asr.get_transcript(numpy_array)
+                    transcript = await asr.get_transcript(numpy_array)
                     for hal in suppress_low:
                         if hal in transcript[1]:
                             hal_flag = True
@@ -192,7 +192,7 @@ async def classify_asr(request: Request):
     # Get transcript
     temp_transcript = [[], '']
     classification_result = ''
-    transcript = asr.get_transcript(numpy_array)
+    transcript = await asr.get_transcript(numpy_array)
     # print(transcript)
     if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
         transcript = temp_transcript
@@ -235,7 +235,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Get transcript
                     temp_transcript = [[], '']
                     classification_result = ''
-                    transcript = asr.get_transcript(numpy_array)
+                    transcript = await asr.get_transcript(numpy_array)
                     for hal in suppress_low:
                         if hal in transcript[1]:
                             hal_flag = True
@@ -332,3 +332,40 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
     except Exception as e:
         print(e)
+        
+@app.websocket("/ws_persistent_transcribe")
+async def websocket_persistent_endpoint(websocket: WebSocket):
+    await websocket.accept()  # Accept the WebSocket connection.
+    try:
+        while True:  # Keep the connection open until the client closes it.
+            data = await websocket.receive()  # Wait for a message from the client.
+            
+            if "bytes" in data:  # Check if the message is a bytes instance.
+                file_data = data["bytes"]
+                file_name_short = ''.join(random.choices(string.ascii_letters + string.digits, k=6)) + ".wav"
+                file_name_full = f'temp/{file_name_short}'
+                with open(file_name_full, "wb") as file:
+                    file.write(file_data)  # Save the received data to a file.
+                
+                # Process the audio file to transcribe it.
+                try:
+                    audio_np, sr = read_wav_as_int16(file_name_full)
+                    transcript = await asr.get_transcript(audio_np)
+                    filtered_transcript = filter_hal(transcript[1])
+                    await websocket.send_text(f"{filtered_transcript}")
+                finally:
+                    try:
+                        os.remove(file_name_full)  # Attempt to delete the file after processing.
+                    except Exception as e:
+                        print(f"Failed to delete file {file_name_full}: {e}")
+            else:
+                # Handle non-bytes messages here.
+                # For this example, we're just echoing back the text.
+                if "text" in data:
+                    await websocket.send_text(f"Received text message: {data['text']}")
+                else:
+                    await websocket.send_text("Unsupported message type.")
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        await websocket.close()  # Make sure the WebSocket is closed properly.
