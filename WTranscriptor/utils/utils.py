@@ -2,6 +2,13 @@ import numpy as np
 import librosa
 import os
 
+from concurrent.futures import ThreadPoolExecutor
+import soundfile as sf
+import numpy as np
+import uuid
+import asyncio
+
+
 def delete_file_if_exists(file_path):
     """Deletes the file at file_path if it exists."""
     if os.path.exists(file_path):
@@ -32,3 +39,40 @@ def read_wav_as_int16(file_path, target_sr=16000):
     audio_int16 = np.int16(audio * 32767)
     
     return audio_int16, sr
+
+# Create a global thread pool executor
+executor = ThreadPoolExecutor()
+
+async def async_save_wav(numpy_array, sample_rate=16000):
+    """
+    Asynchronously saves a NumPy array as a mono WAV file with a specified sample rate using ThreadPoolExecutor.
+    
+    Args:
+        numpy_array (np.ndarray): The audio data to save.
+        sample_rate (int): The sample rate of the audio file.
+
+    Returns:
+        str: The name of the created WAV file.
+    """
+    filename = f"temp/{uuid.uuid4()}.wav"
+
+    # Offload the blocking operation to the thread pool
+    await asyncio.get_running_loop().run_in_executor(
+        executor, 
+        save_wav_sync,  # This is the synchronous save function
+        numpy_array, 
+        sample_rate, 
+        filename
+    )
+
+    return filename
+
+def save_wav_sync(numpy_array, sample_rate=16000, filename = f"temp/{uuid.uuid4()}.wav"):
+    """
+    Synchronously saves a NumPy array as a mono WAV file.
+    This function is intended to be run in a ThreadPoolExecutor.
+    """
+    filename = f"temp/{uuid.uuid4()}.wav"
+    sf.write(filename, numpy_array, sample_rate)
+    return filename
+

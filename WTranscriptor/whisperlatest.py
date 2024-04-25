@@ -130,3 +130,5 @@ class WhisperTranscriptorAPI:
             return transcription,[]
         else:
             return "",[]
+    async def genereate_transcript_from_file(self, file_name):
+        return 'method not implemented; for whisper use generate_transcript_numpy', []

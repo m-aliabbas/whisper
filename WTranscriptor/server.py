@@ -63,6 +63,7 @@ config = {
     "vad_threshold": 0.6,
     "model_path": "distil-whisper/distil-medium.en",
     'mac_device': True,
+    'model_name': 'nemo',
 }
 asr = ASR.get_instance(config)
 
@@ -94,6 +95,16 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
+async def transcript_generator(wave):
+    model_name = config.get('model_name','whisper')
+    transcript = [[],'']
+    if model_name == 'whisper':
+        transcript = await asr.get_transcript(wave)
+    else:
+        file_name = save_wav_sync(wave)
+        transcript = await asr.get_transcript_from_file(file_name=file_name)
+    return transcript
+
 
 @app.websocket("/transcribe")
 async def websocket_endpoint_transcription(websocket: WebSocket):
@@ -121,7 +132,7 @@ async def websocket_endpoint_transcription(websocket: WebSocket):
                     # Get transcript
                     temp_transcript = [[], '']
                     classification_result = ''
-                    transcript = await asr.get_transcript(numpy_array)
+                    transcript = await transcript_generator(wave=numpy_array)
                     for hal in suppress_low:
                         if hal in transcript[1]:
                             hal_flag = True

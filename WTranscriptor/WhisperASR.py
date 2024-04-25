@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 # from whisper2 import WhisperTranscriptorAPI 
-from whisperlatest import WhisperTranscriptorAPI 
 from Singlton import SingletonMeta
 # from silero1 import SileroTranscriptorAPI
 import warnings
@@ -35,7 +34,13 @@ class ASR(object):
         self.model_path= config.get("model_path","tiny.en") 
         self.mac_device = config.get('mac_device',False)
         print("[INFO] Loading Models")
-        self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=False)
+        model_name = config.get('model_name','whisper')
+        if model_name == 'whisper':
+            from whisperlatest import WhisperTranscriptorAPI 
+            self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=False)
+        else:
+            from nemo_asr import NemoTranscriptorAPI
+            self.model = NemoTranscriptorAPI(model_path=self.model_path,mac_device=False)
         # self.model = SileroTranscriptorAPI()
         print("[INFO] Model Loaded")
     @staticmethod
@@ -51,6 +56,10 @@ class ASR(object):
         #ids are model generated tokens id for the ASR
         return ids,transcript
     
+    async def get_transcript_from_file(self,file_name):
+        transcript,ids = await self.model.genereate_transcript_from_file(file_name)
+        #ids are model generated tokens id for the ASR
+        return ids,transcript
 
 if __name__ == "__main__":
     config = dict()
