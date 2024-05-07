@@ -47,7 +47,7 @@ class NemoTranscriptorAPI:
         speech_timestamps = True
         print(speech_timestamps)
         if speech_timestamps:
-            wave = wave / np.iinfo(np.int16).max #normalize
+            
             t1 = timeit.default_timer()
             if not isinstance(file_name,list):
                 file_name = [file_name]
@@ -55,7 +55,7 @@ class NemoTranscriptorAPI:
             transcription = outputs[0]
             t2 = timeit.default_timer()
             print('Time taking for response',t2-t1)
-            print('Audio Length',len(wave)/16000)
+            
             return transcription,[]
         else:
             return "",[]
