@@ -341,8 +341,8 @@ async def websocket_endpoint(websocket: WebSocket):
         with open(file_name_full, "wb") as file:
             file.write(data)  # Save the received data to a file
         audio_np,sr = read_wav_as_int16(file_name_full)
-        transcript = asr.get_transcript(audio_np)
-        filtered_transcript = filter_hal(transcript[1])
+        transcript = await asr.get_transcript(audio_np)
+        filtered_transcript = transcript[1]
         await websocket.send_text(f"{filtered_transcript}")
         await websocket.close()
         try:
@@ -350,7 +350,7 @@ async def websocket_endpoint(websocket: WebSocket):
         except:
             pass
     except Exception as e:
-        print(e)
+        print(f'Error: {e}')
         
 @app.websocket("/ws_persistent_transcribe")
 async def websocket_persistent_endpoint(websocket: WebSocket):
@@ -370,7 +370,7 @@ async def websocket_persistent_endpoint(websocket: WebSocket):
                 try:
                     audio_np, sr = read_wav_as_int16(file_name_full)
                     transcript = await transcript_generator(audio_np)
-                    filtered_transcript = filter_hal(transcript[1])
+                    filtered_transcript = transcript[1]
                     await websocket.send_text(f"{filtered_transcript}")
                 finally:
                     try:

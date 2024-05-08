@@ -7,12 +7,12 @@ import os
 import zlib
 from typing import Optional,Dict,List,Collection
 warnings.filterwarnings('ignore')
-
+from utils.utils import *
 '''
 Faster Implementation of Whisper
 '''
 
-torch.set_num_threads(1)
+torch.set_num_threads(8)
 
 
 class WhisperTranscriptorAPI:
@@ -170,7 +170,7 @@ class WhisperTranscriptorAPI:
             generate_kwargs=generate_kwargs,
             return_timestamps=False,
                  )
-            transcription = outputs['text']
+            transcription = filter_hallucination(outputs['text'])
             print(transcription)
             t2 = timeit.default_timer()
             print('Time taking for response',t2-t1)

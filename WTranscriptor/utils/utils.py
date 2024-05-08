@@ -8,7 +8,49 @@ import numpy as np
 import uuid
 import asyncio
 
+suppress_low = [
+    "Thank you",
+    "Thanks for",
+    "ike and ",
+    "lease sub",
+    "The end.",
+    "ubscribe",
+    "my channel",
+    "the channel",
+    "our channel",
+    "ollow me on",
+    "for watching",
+    "hank you for watching",
+    "for your viewing",
+    "r viewing",
+    "Amara",
+    "next video",
+    "full video",
+    "ranslation by",
+    "ranslated by",
+    "ee you next week",
+    "video",
+    "See you, bye-bye.",
+    'bye',
+    'bye-bye',
+    'See you, bye-bye.',
+    '..',
+    'hhhh',
 
+
+    
+]
+
+def filter_hallucination(transcript):
+    for token  in suppress_low:
+        if token in transcript:
+            return ''
+    hal = ['you','your','video','thank']
+    if len(transcript) < 6:
+        for hal_st in hal:
+            if hal_st in transcript:
+                return ''
+    return transcript
 def delete_file_if_exists(file_path):
     """Deletes the file at file_path if it exists."""
     if os.path.exists(file_path):
