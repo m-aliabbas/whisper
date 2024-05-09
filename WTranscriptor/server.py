@@ -71,7 +71,7 @@ config = {
     "vad_threshold": 0.6,
     "model_path": "openai/whisper-base.en",
     'mac_device': True,
-    'model_name': 'whisper',
+    'model_name': 'nemo',
 }
 asr = ASR.get_instance(config)
 
@@ -334,14 +334,18 @@ from websockets.exceptions import ConnectionClosedOK
 @app.websocket("/ws_file_transcribe1")
 async def websocket_endpoint(websocket: WebSocket):
     try:
+        model_name = config.get('model_name','whisper')
         await websocket.accept()
         data = await websocket.receive_bytes()  # Receive file data as bytes
         file_name_short = ''.join(random.choices(string.ascii_letters + string.digits, k=6)) + ".wav"
         file_name_full = f'temp/{file_name_short}'
         with open(file_name_full, "wb") as file:
             file.write(data)  # Save the received data to a file
-        audio_np,sr = read_wav_as_int16(file_name_full)
-        transcript = await asr.get_transcript(audio_np)
+        if model_name == 'whisper':
+            audio_np,sr = read_wav_as_int16(file_name_full)
+            transcript = await asr.get_transcript(audio_np)
+        else:
+            transcript = await asr.get_transcript_from_file(file_name_full)
         filtered_transcript = transcript[1]
         await websocket.send_text(f"{filtered_transcript}")
         await websocket.close()

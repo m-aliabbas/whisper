@@ -12,7 +12,7 @@ from utils.utils import *
 Faster Implementation of Whisper
 '''
 
-torch.set_num_threads(8)
+# torch.set_num_threads(8)
 
 
 class WhisperTranscriptorAPI:
