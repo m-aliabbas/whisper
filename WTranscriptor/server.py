@@ -105,8 +105,8 @@ manager = ConnectionManager()
 
 async def transcript_generator(wave,sampling_rate=16000):
     model_name = config.get('model_name','whisper')
+    wave = wave / np.iinfo(np.int16).max
     if sampling_rate != 16000:
-        wave = wave / np.iinfo(np.int16).max
         wave = librosa.resample(wave, orig_sr=sampling_rate, target_sr=16000)
 
     transcript = [[],'']
