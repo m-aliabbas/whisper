@@ -146,7 +146,7 @@ class WhisperTranscriptorAPI:
         if self.model_path.split(".")[-1] == "en":
             generate_kwargs.pop("task")
             generate_kwargs.pop("language") 
-        
+         
         t1 = timeit.default_timer()
         with torch.no_grad():
             speech_timestamps = self.get_speech_timestamps(wave, self.vad_model, sampling_rate=16000,threshold=0.5)

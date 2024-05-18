@@ -71,7 +71,7 @@ config = {
     "vad_threshold": 0.6,
     "model_path": "openai/whisper-base.en",
     'mac_device': True,
-    'model_name': 'nemo',
+    'model_name': 'whisper',
 }
 asr = ASR.get_instance(config)
 
