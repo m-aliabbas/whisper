@@ -157,7 +157,7 @@ class WhisperTranscriptorAPI:
             # wave = torch.from_numpy(wave)
             # wave1 = collect_chunks(speech_timestamps, wave)
             # wave = wave1.numpy()
-            wave = wave / np.iinfo(np.int16).max #normalize
+            # wave = wave / np.iinfo(np.int16).max #normalize
             # self.language_detection(wave)
             t1 = timeit.default_timer()
             outputs = self.model(
