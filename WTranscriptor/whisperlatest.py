@@ -149,20 +149,7 @@ class WhisperTranscriptorAPI:
             generate_kwargs.pop("language") 
          
         t1 = timeit.default_timer()
-<<<<<<< HEAD
-        with torch.no_grad():
-            speech_timestamps = self.get_speech_timestamps(wave, self.vad_model, sampling_rate=16000,threshold=0.5)
-        # speech_timestamps = True
-        print(speech_timestamps)
-        if speech_timestamps:
-            wave = torch.from_numpy(wave)
-            if len(speech_timestamps) <=0 :
-                print('NO sound')
-                return '', []
 
-            wave1 = self.collect_chunks(speech_timestamps, wave)
-            wave = wave1.numpy()
-=======
         # speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.1)
         speech_timestamps = True
         # print(speech_timestamps)
@@ -170,8 +157,6 @@ class WhisperTranscriptorAPI:
             # wave = torch.from_numpy(wave)
             # wave1 = collect_chunks(speech_timestamps, wave)
             # wave = wave1.numpy()
-
->>>>>>> b8ffaeb (Sampling issue resolved)
             wave = wave / np.iinfo(np.int16).max #normalize
             # self.language_detection(wave)
             t1 = timeit.default_timer()

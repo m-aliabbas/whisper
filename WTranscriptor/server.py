@@ -344,18 +344,10 @@ async def websocket_endpoint(websocket: WebSocket):
         file_name_full = f'temp/{file_name_short}'
         with open(file_name_full, "wb") as file:
             file.write(data)  # Save the received data to a file
-<<<<<<< HEAD
-        if model_name == 'whisper':
-            audio_np,sr = read_wav_as_int16(file_name_full)
-            transcript = await asr.get_transcript(audio_np)
-        else:
-            transcript = await asr.get_transcript_from_file(file_name_full)
-        filtered_transcript = transcript[1]
-=======
+
         audio_np,sr = read_wav_as_int16(file_name_full)
         transcript = await transcript_generator(wave=audio_np)
         filtered_transcript = filter_hal(transcript[1])
->>>>>>> b8ffaeb (Sampling issue resolved)
         await websocket.send_text(f"{filtered_transcript}")
         await websocket.close()
         try:
@@ -382,13 +374,8 @@ async def websocket_persistent_endpoint(websocket: WebSocket):
                 # Process the audio file to transcribe it.
                 try:
                     audio_np, sr = read_wav_as_int16(file_name_full)
-<<<<<<< HEAD
-                    transcript = await transcript_generator(audio_np)
-                    filtered_transcript = transcript[1]
-=======
                     transcript = await transcript_generator(wave=audio_np)
                     filtered_transcript = filter_hal(transcript[1])
->>>>>>> b8ffaeb (Sampling issue resolved)
                     await websocket.send_text(f"{filtered_transcript}")
                 finally:
                     try:
