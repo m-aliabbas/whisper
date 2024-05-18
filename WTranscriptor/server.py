@@ -103,11 +103,14 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-async def transcript_generator(wave):
+async def transcript_generator(wave,sampling_rate=16000):
     model_name = config.get('model_name','whisper')
+    if sampling_rate != 16000:
+        wave = librosa.resample(wave,sampling_rate,16000)
+    
     transcript = [[],'']
     if model_name == 'whisper':
-        transcript = await asr.get_transcript(wave)
+        transcript = await asr.get_transcript(wave,sample_rate=sampling_rate)
     else:
         file_name = save_wav_sync(wave)
         transcript = await asr.get_transcript_from_file(file_name=file_name)
@@ -211,7 +214,7 @@ async def classify_asr(request: Request):
     # Get transcript
     temp_transcript = [[], '']
     classification_result = ''
-    transcript = await asr.get_transcript(numpy_array)
+    transcript = await transcript_generator(wave=numpy_array)
     # print(transcript)
     if len(transcript[1]) < 5 and ('you' in transcript[1].lower()): 
         transcript = temp_transcript
@@ -254,7 +257,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Get transcript
                     temp_transcript = [[], '']
                     classification_result = ''
-                    transcript = await asr.get_transcript(numpy_array)
+                    transcript = await transcript_generator(wave=numpy_array)
                     for hal in suppress_low:
                         if hal in transcript[1]:
                             hal_flag = True
@@ -323,7 +326,7 @@ def filter_hal(txt):
 async def audio_to_numpy(file: bytes = File(...)):
     try:
         audio_np = np.frombuffer(file, dtype=np.int16)
-        transcript = asr.get_transcript(audio_np)
+        transcript = await transcript_generator(wave=audio_np,sampling_rate=8000)
         txt = filter_hal(transcript[1])
         return {"message": "Conversion successful", "transcript":txt}
     except Exception as e:
@@ -341,12 +344,18 @@ async def websocket_endpoint(websocket: WebSocket):
         file_name_full = f'temp/{file_name_short}'
         with open(file_name_full, "wb") as file:
             file.write(data)  # Save the received data to a file
+<<<<<<< HEAD
         if model_name == 'whisper':
             audio_np,sr = read_wav_as_int16(file_name_full)
             transcript = await asr.get_transcript(audio_np)
         else:
             transcript = await asr.get_transcript_from_file(file_name_full)
         filtered_transcript = transcript[1]
+=======
+        audio_np,sr = read_wav_as_int16(file_name_full)
+        transcript = await transcript_generator(wave=audio_np)
+        filtered_transcript = filter_hal(transcript[1])
+>>>>>>> b8ffaeb (Sampling issue resolved)
         await websocket.send_text(f"{filtered_transcript}")
         await websocket.close()
         try:
@@ -373,8 +382,13 @@ async def websocket_persistent_endpoint(websocket: WebSocket):
                 # Process the audio file to transcribe it.
                 try:
                     audio_np, sr = read_wav_as_int16(file_name_full)
+<<<<<<< HEAD
                     transcript = await transcript_generator(audio_np)
                     filtered_transcript = transcript[1]
+=======
+                    transcript = await transcript_generator(wave=audio_np)
+                    filtered_transcript = filter_hal(transcript[1])
+>>>>>>> b8ffaeb (Sampling issue resolved)
                     await websocket.send_text(f"{filtered_transcript}")
                 finally:
                     try:

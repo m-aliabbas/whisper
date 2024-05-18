@@ -46,13 +46,13 @@ class ASR(object):
     @staticmethod
     def get_instance(config):
         return ASR(config)
-    async def get_transcript(self, data_torch, is_greedy=False, emissions_only=False):
+    async def get_transcript(self, data_torch, is_greedy=False, emissions_only=False,sample_rate=16000):
         '''
          This function will generate transcripts using whisper.
          
         '''
         wave=data_torch # get the wave data
-        transcript,ids = await self.model.generate_transcript_numpy(wave=wave)
+        transcript,ids = await self.model.generate_transcript_numpy(wave=wave,sample_rate=sample_rate)
         #ids are model generated tokens id for the ASR
         return ids,transcript
     
