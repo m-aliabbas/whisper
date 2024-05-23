@@ -50,6 +50,7 @@ class WhisperTranscriptorAPI:
         # device='cpu'
         # compute_type="int8"
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = device
         print(device == "cuda" , "cuda check")
         if mac_device:
             print(f"[INFO] Loading on Mac Device")
@@ -89,7 +90,7 @@ class WhisperTranscriptorAPI:
         self.vad_model, self.utils = torch.hub.load('snakers4/silero-vad',
                               model='silero_vad',
                               force_reload=False)
-
+        self.vad_model = self.vad_model.to(device)
         (self.get_speech_timestamps,
         self.save_audio,
         self.read_audio,
@@ -124,9 +125,9 @@ class WhisperTranscriptorAPI:
         print('vad',enable_vad,speech_timestamps)
         if speech_timestamps:
             if enable_vad:
-                wave = torch.from_numpy(wave)
+                wave = torch.from_numpy(wave).to(self.device)
                 wave1 = self.collect_chunks(speech_timestamps, wave)
-                wave = wave1.numpy()
+                wave = wave1.cpu.numpy()
             else:
                 pass
             t1 = timeit.default_timer()
