@@ -134,7 +134,7 @@ class WhisperTranscriptorAPI:
     #-------------------- generate transcript from nmpy array ----------------
     #
     
-    async def generate_transcript_numpy(self, wave,sample_rate=16000):
+    async def generate_transcript_numpy(self, wave,sample_rate=16000,enable_vad = False):
         
         '''
         Generate transcript usign a numpy array given as inpuy 
@@ -149,16 +149,18 @@ class WhisperTranscriptorAPI:
             generate_kwargs.pop("language") 
          
         t1 = timeit.default_timer()
-
-        # speech_timestamps = get_speech_timestamps(wave, vad_model, sampling_rate=16000,threshold=0.1)
-        speech_timestamps = True
+        if enable_vad:
+            speech_timestamps = self.get_speech_timestamps(wave, self.vad_model, sampling_rate=16000,threshold=0.1)
+        else:
+            speech_timestamps = True
         # print(speech_timestamps)
         if speech_timestamps:
-            # wave = torch.from_numpy(wave)
-            # wave1 = collect_chunks(speech_timestamps, wave)
-            # wave = wave1.numpy()
-            # wave = wave / np.iinfo(np.int16).max #normalize
-            # self.language_detection(wave)
+            if enable_vad:
+                wave = torch.from_numpy(wave)
+                wave1 = self.collect_chunks(speech_timestamps, wave)
+                wave = wave1.numpy()
+            else:
+                pass
             t1 = timeit.default_timer()
             outputs = self.model(
                 wave,

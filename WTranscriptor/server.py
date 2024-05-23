@@ -72,6 +72,7 @@ config = {
     "model_path": "openai/whisper-base.en",
     'mac_device': True,
     'model_name': 'whisper',
+    'enable_vad': True,
 }
 asr = ASR.get_instance(config)
 
@@ -111,7 +112,7 @@ async def transcript_generator(wave,sampling_rate=16000):
 
     transcript = [[],'']
     if model_name == 'whisper':
-        transcript = await asr.get_transcript(wave,sample_rate=sampling_rate)
+        transcript = await asr.get_transcript(wave,sample_rate=sampling_rate,enable_vad=config['enable_vad'])
     else:
         file_name = save_wav_sync(wave)
         transcript = await asr.get_transcript_from_file(file_name=file_name)

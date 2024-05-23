@@ -46,7 +46,8 @@ class ASR(object):
     @staticmethod
     def get_instance(config):
         return ASR(config)
-    async def get_transcript(self, data_torch, is_greedy=False, emissions_only=False,sample_rate=16000):
+    async def get_transcript(self, data_torch, is_greedy=False, emissions_only=False,sample_rate=16000,
+                             enable_vad = False):
         '''
          This function will generate transcripts using whisper.
          
