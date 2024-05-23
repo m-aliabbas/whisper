@@ -73,6 +73,7 @@ config = {
     'mac_device': True,
     'model_name': 'whisper',
     'enable_vad': True,
+    'vad_thresold': 0.6,
 }
 asr = ASR.get_instance(config)
 

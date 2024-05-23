@@ -64,7 +64,7 @@ class WhisperTranscriptorAPI:
 
     def __init__(self,model_path='',file_processing=False,word_timestamp=True,mac_device=False,
                  dtype = torch.float16,en_flash_attention = False,batch_size=128,
-                 vad_model = None):
+                 vad_model = None,vad_thresold = 0.6):
 
         '''
         1) Defining processor for processing audio input for Whisper and
@@ -77,7 +77,7 @@ class WhisperTranscriptorAPI:
         '''
         self.mac_device = mac_device
         self.model_path = model_path
-        
+        self.vad_thresold = vad_thresold
         self.batch_size = batch_size
         # print(self.model_path)
         # device='cpu'
@@ -150,7 +150,7 @@ class WhisperTranscriptorAPI:
          
         t1 = timeit.default_timer()
         if enable_vad:
-            speech_timestamps = self.get_speech_timestamps(wave, self.vad_model, sampling_rate=16000,threshold=0.1)
+            speech_timestamps = self.get_speech_timestamps(wave, self.vad_model, sampling_rate=16000,threshold=self.vad_thresold)
         else:
             speech_timestamps = True
         # print(speech_timestamps)

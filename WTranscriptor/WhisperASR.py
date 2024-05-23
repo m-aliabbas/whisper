@@ -35,9 +35,10 @@ class ASR(object):
         self.mac_device = config.get('mac_device',False)
         print("[INFO] Loading Models")
         model_name = config.get('model_name','whisper')
+        vad_thresold = config.get('vad_thresold',0.6)
         if model_name == 'whisper':
             from whisperlatest import WhisperTranscriptorAPI 
-            self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=False)
+            self.model = WhisperTranscriptorAPI(model_path=self.model_path,mac_device=False,vad_thresold=vad_thresold)
         else:
             from nemo_asr import NemoTranscriptorAPI
             self.model = NemoTranscriptorAPI(model_path=self.model_path,mac_device=False)
