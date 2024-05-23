@@ -26,45 +26,11 @@ class WhisperTranscriptorAPI:
     '''
     #----------------------- constructor -------------------------------------
     #
-    def detect_language(self,model: WhisperForConditionalGeneration, tokenizer: WhisperTokenizer, input_features,
-                    possible_languages: Optional[Collection[str]] = None) -> List[Dict[str, float]]:
-        # hacky, but all language tokens and only language tokens are 6 characters long
-        language_tokens = [t for t in tokenizer.additional_special_tokens if len(t) == 6]
-        # if possible_languages is not None:
-        #     language_tokens = [t for t in language_tokens if t[2:-2] in possible_languages]
-        #     if len(language_tokens) < len(possible_languages):
-        #         raise RuntimeError(f'Some languages in {possible_languages} did not have associated language tokens')
-
-        language_token_ids = tokenizer.convert_tokens_to_ids(language_tokens)
-
-        # 50258 is the token for transcribing
-        logits = model(input_features,
-                    decoder_input_ids = torch.tensor([[50258] for _ in range(input_features.shape[0])])).logits
-        mask = torch.ones(logits.shape[-1], dtype=torch.bool)
-        mask[language_token_ids] = False
-        logits[:, :, mask] = -float('inf')
-
-        output_probs = logits.softmax(dim=-1).cpu()
-        return [
-            {
-                lang: output_probs[input_idx, 0, token_id].item()
-                for token_id, lang in zip(language_token_ids, language_tokens)
-            }
-            for input_idx in range(logits.shape[0])
-        ]
-    def language_detection(self,wave):
-        processor = WhisperProcessor.from_pretrained('openai/whisper-tiny.en')
-        model = WhisperForConditionalGeneration.from_pretrained('openai/whisper-tiny.en')
-        tokenizer = WhisperTokenizer.from_pretrained('openai/whisper-tiny.en')
-        input_features = processor(wave, sampling_rate=16000,
-                               return_tensors="pt").input_features
-
-        language = self.detect_language(model, tokenizer, input_features, {'en', 'zh'})
-        print(language)
+    
 
     def __init__(self,model_path='',file_processing=False,word_timestamp=True,mac_device=False,
                  dtype = torch.float16,en_flash_attention = False,batch_size=128,
-                 vad_model = None,vad_thresold = 0.6):
+                 vad_model = None,vad_thresold = 0.6,detect_language = True):
 
         '''
         1) Defining processor for processing audio input for Whisper and
@@ -79,6 +45,7 @@ class WhisperTranscriptorAPI:
         self.model_path = model_path
         self.vad_thresold = vad_thresold
         self.batch_size = batch_size
+        self.detect_language = detect_language
         # print(self.model_path)
         # device='cpu'
         # compute_type="int8"
@@ -129,11 +96,25 @@ class WhisperTranscriptorAPI:
         self.VADIterator,
         self.collect_chunks) = self.utils
 
+        self.lang_model, self.lang_dict, self.lang_group_dict,  self.lang_utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+                                                           model='silero_lang_detector_95',
+                                                           force_reload=False,
+                                                           onnx=True)
+        self.lang_model.to(device)
+        self.get_language_and_group, self.read_audio = self.lang_utils
+
         
     
     #-------------------- generate transcript from nmpy array ----------------
     #
-    
+    async def language_detection(self,wave):
+        languages, language_groups = self.get_language_and_group(wave, self.lang_model, self.lang_dict, self.lang_group_dict, top_n=2)
+
+        for i in languages:
+            print(f'Language: {i[0]} with prob {i[-1]}')
+
+        for i in language_groups:
+            print(f'Language group: {i[0]} with prob {i[-1]}')
     async def generate_transcript_numpy(self, wave,sample_rate=16000,enable_vad = False):
         
         '''
@@ -158,6 +139,7 @@ class WhisperTranscriptorAPI:
             if enable_vad:
                 wave = torch.from_numpy(wave)
                 wave1 = self.collect_chunks(speech_timestamps, wave)
+                self.language_detection(wave1)
                 wave = wave1.numpy()
             else:
                 pass
