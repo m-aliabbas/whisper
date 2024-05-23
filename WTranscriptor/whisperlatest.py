@@ -96,25 +96,12 @@ class WhisperTranscriptorAPI:
         self.VADIterator,
         self.collect_chunks) = self.utils
 
-        self.lang_model, self.lang_dict, self.lang_group_dict,  self.lang_utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
-                                                           model='silero_lang_detector_95',
-                                                           force_reload=False,
-                                                           onnx=True)
-        self.lang_model.to(device)
-        self.get_language_and_group, self.read_audio = self.lang_utils
-
+        
         
     
     #-------------------- generate transcript from nmpy array ----------------
     #
-    async def language_detection(self,wave):
-        languages, language_groups = self.get_language_and_group(wave, self.lang_model, self.lang_dict, self.lang_group_dict, top_n=2)
 
-        for i in languages:
-            print(f'Language: {i[0]} with prob {i[-1]}')
-
-        for i in language_groups:
-            print(f'Language group: {i[0]} with prob {i[-1]}')
     async def generate_transcript_numpy(self, wave,sample_rate=16000,enable_vad = False):
         
         '''
@@ -139,7 +126,6 @@ class WhisperTranscriptorAPI:
             if enable_vad:
                 wave = torch.from_numpy(wave)
                 wave1 = self.collect_chunks(speech_timestamps, wave)
-                self.language_detection(wave1)
                 wave = wave1.numpy()
             else:
                 pass
