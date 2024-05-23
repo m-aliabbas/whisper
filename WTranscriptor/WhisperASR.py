@@ -54,7 +54,7 @@ class ASR(object):
          
         '''
         wave=data_torch # get the wave data
-        transcript,ids = await self.model.generate_transcript_numpy(wave=wave,sample_rate=sample_rate)
+        transcript,ids = await self.model.generate_transcript_numpy(wave=wave,sample_rate=sample_rate,enable_vad=enable_vad)
         #ids are model generated tokens id for the ASR
         return ids,transcript
     

@@ -153,7 +153,7 @@ class WhisperTranscriptorAPI:
             speech_timestamps = self.get_speech_timestamps(wave, self.vad_model, sampling_rate=16000,threshold=self.vad_thresold)
         else:
             speech_timestamps = True
-        # print(speech_timestamps)
+        print('vad',enable_vad,speech_timestamps)
         if speech_timestamps:
             if enable_vad:
                 wave = torch.from_numpy(wave)

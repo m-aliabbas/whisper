@@ -7,10 +7,30 @@ import soundfile as sf
 import numpy as np
 import uuid
 import asyncio
-
+import re
+def is_hallucination(transcript, repetition_threshold=2):
+    # Split the transcript into words
+    words = transcript.split()
+    
+    # Create a regex pattern for detecting repeated words
+    pattern = re.compile(r'\b(\w+)\b\s+\1\b')
+    
+    # Initialize a counter for repeated sequences
+    repeat_count = 0
+    
+    # Iterate through the words and check for repetitions
+    for i in range(len(words) - 1):
+        if words[i] == words[i + 1]:
+            repeat_count += 1
+            if repeat_count > repetition_threshold:
+                return True
+        else:
+            repeat_count = 0
+    
+    return False
 suppress_low = [
-    "Thank you",
-    "Thanks for",
+    "thank you",
+    "thanks for",
     "ike and ",
     "lease sub",
     "The end.",
@@ -30,10 +50,10 @@ suppress_low = [
     "ranslated by",
     "ee you next week",
     "video",
-    "See you, bye-bye.",
+    "see you",
     'bye',
     'bye-bye',
-    'See you, bye-bye.',
+    'see you, b.',
     '..',
     'hhhh',
 
@@ -43,13 +63,15 @@ suppress_low = [
 
 def filter_hallucination(transcript):
     for token  in suppress_low:
-        if token in transcript:
+        if token in transcript.lower():
             return ''
-    hal = ['you','your','video','thank']
+    hal = ['you','your','video','thank','the','oh']
     if len(transcript) < 6:
         for hal_st in hal:
-            if hal_st in transcript:
+            if hal_st in transcript.lower():
                 return ''
+    if is_hallucination(transcript=transcript):
+        return ''
     return transcript
 def delete_file_if_exists(file_path):
     """Deletes the file at file_path if it exists."""

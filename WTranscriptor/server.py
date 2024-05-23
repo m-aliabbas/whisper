@@ -60,6 +60,8 @@ suppress_low = [
     'See you, bye-bye.',
     '..',
     'hhhh',
+    'bird',
+    
 
 
     
@@ -69,7 +71,7 @@ config = {
     "sample_rate": 16000,
     "duration_threshold": 3,
     "vad_threshold": 0.6,
-    "model_path": "openai/whisper-base.en",
+    "model_path": "openai/whisper-small.en",
     'mac_device': True,
     'model_name': 'whisper',
     'enable_vad': True,
